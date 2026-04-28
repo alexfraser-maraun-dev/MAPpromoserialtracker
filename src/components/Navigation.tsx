@@ -19,7 +19,10 @@ export default function Navigation() {
       alignItems: 'center'
     }}>
       <div className="flex items-center gap-6">
-        <h1 style={{ margin: 0, fontSize: '1.25rem' }}>Bici Serial Tracker</h1>
+        <Link href="/" className="flex items-center gap-3" style={{ textDecoration: 'none', color: 'inherit' }}>
+          <img src="/logo.png" alt="Bici Logo" style={{ height: '32px', width: 'auto' }} />
+          <h1 style={{ margin: 0, fontSize: '1.25rem' }}>Bici Serial Tracker</h1>
+        </Link>
         <nav className="flex gap-4">
           <Link href="/" className="flex items-center gap-2 text-muted hover:text-text">
             <List size={18} /> Collections

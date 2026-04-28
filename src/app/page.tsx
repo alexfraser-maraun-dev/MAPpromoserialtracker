@@ -21,6 +21,11 @@ export default function Home() {
   const [isCreating, setIsCreating] = useState(false);
   const [newCollectionName, setNewCollectionName] = useState('');
   const [newCollectionBrand, setNewCollectionBrand] = useState('');
+  const [showClosed, setShowClosed] = useState(false);
+
+  const filteredCollections = showClosed 
+    ? collections 
+    : collections.filter(c => c.status !== 'closed');
 
   useEffect(() => {
     fetchCollections();
@@ -78,6 +83,15 @@ export default function Home() {
     <div>
       <div className="flex justify-between items-center mb-6">
         <h1>Collections</h1>
+        <label className="flex items-center gap-2 text-sm cursor-pointer select-none">
+          <input 
+            type="checkbox" 
+            checked={showClosed} 
+            onChange={(e) => setShowClosed(e.target.checked)}
+            style={{ width: 'auto' }}
+          />
+          Show Closed
+        </label>
       </div>
 
       <div className="card mb-6">
@@ -112,7 +126,7 @@ export default function Home() {
         <p>Loading collections...</p>
       ) : (
         <div className="grid grid-cols-1 gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))' }}>
-          {collections.map(col => (
+          {filteredCollections.map(col => (
             <div key={col.id} className="card flex flex-col justify-between">
               <div>
                 <div className="flex justify-between items-center mb-2">

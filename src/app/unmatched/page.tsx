@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useSession } from 'next-auth/react';
-import { Edit2, CheckCircle2 } from 'lucide-react';
+import { Edit2, CheckCircle2, Trash2 } from 'lucide-react';
 
 type Scan = {
   id: string;
@@ -107,6 +107,21 @@ export default function UnmatchedPage() {
     }
   };
 
+  const handleDelete = async (id: string) => {
+    if (!confirm('Are you sure you want to permanently delete this scan?')) return;
+    
+    const { error } = await supabase
+      .from('serial_scans')
+      .delete()
+      .eq('id', id);
+
+    if (!error) {
+      fetchUnmatched();
+    } else {
+      alert('Failed to delete scan.');
+    }
+  };
+
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
@@ -135,9 +150,14 @@ export default function UnmatchedPage() {
                       {editingId === scan.id ? (
                         <button onClick={() => setEditingId(null)} className="btn btn-outline text-sm">Cancel</button>
                       ) : (
-                        <button onClick={() => startEditing(scan)} className="btn btn-outline text-sm">
-                          <Edit2 size={16} className="mr-2" /> Assign Product
-                        </button>
+                        <div className="flex justify-end gap-2">
+                          <button onClick={() => startEditing(scan)} className="btn btn-outline text-sm">
+                            <Edit2 size={16} className="mr-2" /> Assign Product
+                          </button>
+                          <button onClick={() => handleDelete(scan.id)} className="btn btn-outline text-error text-sm" style={{ padding: '0.5rem' }} title="Delete Scan">
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
                       )}
                     </td>
                   </tr>

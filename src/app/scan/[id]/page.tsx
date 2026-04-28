@@ -119,13 +119,14 @@ export default function ScanPage({ params }: { params: Promise<{ id: string }> }
     
     // Duplicate Check 1 & 2: Local Session / Preloaded Database
     if (sessionScans.current.has(normalized)) {
-      setScans(prev => [{
+      const duplicateScan: ScanRow = {
         id: uiId,
         serial_number: rawSerial,
         normalized_serial_number: normalized,
         status: 'duplicate',
         timestamp: new Date()
-      }, ...prev].slice(0, 25));
+      };
+      setScans(prev => [duplicateScan, ...prev].slice(0, 25));
       return;
     }
 
@@ -148,7 +149,7 @@ export default function ScanPage({ params }: { params: Promise<{ id: string }> }
     setScans(prev => [newScanRow, ...prev].slice(0, 25));
 
     // Async Database Upload
-    const match_status = matchedRule ? 'matched' : 'unmatched';
+    const match_status: ScanRow['status'] = matchedRule ? 'matched' : 'unmatched';
     
     const dbPayload = {
       collection_id: collectionId,
@@ -170,9 +171,9 @@ export default function ScanPage({ params }: { params: Promise<{ id: string }> }
 
     if (error) {
       if (error.code === '23505') { // Unique constraint violation in postgres
-        setScans(prev => prev.map(s => s.id === uiId ? { ...s, status: 'duplicate', product_description: 'Already scanned globally.' } : s));
+        setScans(prev => prev.map(s => s.id === uiId ? { ...s, status: 'duplicate' as ScanRow['status'], product_description: 'Already scanned globally.' } : s));
       } else {
-        setScans(prev => prev.map(s => s.id === uiId ? { ...s, status: 'error', product_description: 'Failed to save to database.' } : s));
+        setScans(prev => prev.map(s => s.id === uiId ? { ...s, status: 'error' as ScanRow['status'], product_description: 'Failed to save to database.' } : s));
         sessionScans.current.delete(normalized); // Remove from local cache so they can try again
       }
     } else {

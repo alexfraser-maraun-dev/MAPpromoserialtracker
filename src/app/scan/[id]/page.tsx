@@ -126,7 +126,7 @@ export default function ScanPage({ params }: { params: Promise<{ id: string }> }
         status: 'duplicate',
         timestamp: new Date()
       };
-      setScans(prev => [duplicateScan, ...prev].slice(0, 25));
+      setScans(prev => [duplicateScan, ...prev]);
       return;
     }
 
@@ -146,7 +146,7 @@ export default function ScanPage({ params }: { params: Promise<{ id: string }> }
       timestamp: new Date()
     };
     
-    setScans(prev => [newScanRow, ...prev].slice(0, 25));
+    setScans(prev => [newScanRow, ...prev]);
 
     // Async Database Upload
     const match_status: ScanRow['status'] = matchedRule ? 'matched' : 'unmatched';

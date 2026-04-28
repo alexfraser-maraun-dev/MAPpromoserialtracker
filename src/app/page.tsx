@@ -1,65 +1,168 @@
-import Image from "next/image";
+'use client';
+
+import { useEffect, useState } from 'react';
+import { supabase } from '@/lib/supabase';
+import Link from 'next/link';
+import { Plus, Play, Download, Archive } from 'lucide-react';
+import { useSession } from 'next-auth/react';
+
+type Collection = {
+  id: string;
+  name: string;
+  brand: string | null;
+  status: 'draft' | 'active' | 'closed' | 'exported';
+  created_at: string;
+};
 
 export default function Home() {
+  const { data: session } = useSession();
+  const [collections, setCollections] = useState<Collection[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isCreating, setIsCreating] = useState(false);
+  const [newCollectionName, setNewCollectionName] = useState('');
+  const [newCollectionBrand, setNewCollectionBrand] = useState('');
+
+  useEffect(() => {
+    fetchCollections();
+  }, []);
+
+  const fetchCollections = async () => {
+    setIsLoading(true);
+    const { data, error } = await supabase
+      .from('collections')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (!error && data) {
+      setCollections(data);
+    }
+    setIsLoading(false);
+  };
+
+  const handleCreate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newCollectionName || !session?.user?.email) return;
+
+    setIsCreating(true);
+    const { data, error } = await supabase
+      .from('collections')
+      .insert([
+        {
+          name: newCollectionName,
+          brand: newCollectionBrand || null,
+          status: 'active',
+          created_by: session.user.email,
+        }
+      ])
+      .select()
+      .single();
+
+    if (!error && data) {
+      setCollections([data, ...collections]);
+      setNewCollectionName('');
+      setNewCollectionBrand('');
+    }
+    setIsCreating(false);
+  };
+
+  const updateStatus = async (id: string, status: string) => {
+    await supabase.from('collections').update({ status }).eq('id', id);
+    fetchCollections();
+  };
+
+  const downloadCsv = (id: string) => {
+    window.open(`/api/collections/export/${id}`, '_blank');
+  };
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
+    <div>
+      <div className="flex justify-between items-center mb-6">
+        <h1>Collections</h1>
+      </div>
+
+      <div className="card mb-6">
+        <h3>Create New Collection</h3>
+        <form onSubmit={handleCreate} className="flex gap-4 mt-4 items-center">
+          <div style={{ flex: 1 }}>
+            <input 
+              type="text" 
+              placeholder="Collection Name (e.g., Summer MAP Window)" 
+              className="input"
+              value={newCollectionName}
+              onChange={(e) => setNewCollectionName(e.target.value)}
+              required
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+          </div>
+          <div style={{ flex: 1 }}>
+            <input 
+              type="text" 
+              placeholder="Brand (Optional)" 
+              className="input"
+              value={newCollectionBrand}
+              onChange={(e) => setNewCollectionBrand(e.target.value)}
+            />
+          </div>
+          <button type="submit" className="btn btn-primary" disabled={isCreating}>
+            <Plus size={18} className="mr-2" /> Create
+          </button>
+        </form>
+      </div>
+
+      {isLoading ? (
+        <p>Loading collections...</p>
+      ) : (
+        <div className="grid grid-cols-1 gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))' }}>
+          {collections.map(col => (
+            <div key={col.id} className="card flex flex-col justify-between">
+              <div>
+                <div className="flex justify-between items-center mb-2">
+                  <h3 style={{ margin: 0 }}>{col.name}</h3>
+                  <span className={`badge badge-${col.status === 'active' ? 'success' : col.status === 'draft' ? 'warning' : 'neutral'}`}>
+                    {col.status}
+                  </span>
+                </div>
+                <p className="text-sm text-muted mb-4">
+                  {col.brand ? `Brand: ${col.brand}` : 'No brand specified'} <br />
+                  Created: {new Date(col.created_at).toLocaleDateString()}
+                </p>
+              </div>
+              
+              <div className="flex gap-2 mt-4" style={{ flexWrap: 'wrap' }}>
+                <Link href={`/collection/${col.id}`} className="btn btn-outline" style={{ flex: 1 }}>
+                  View Scans
+                </Link>
+
+                {col.status === 'active' && (
+                  <Link href={`/scan/${col.id}`} className="btn btn-primary" style={{ flex: 1 }}>
+                    <Play size={16} className="mr-2" /> Start Scanning
+                  </Link>
+                )}
+                
+                {col.status === 'active' && (
+                  <button onClick={() => updateStatus(col.id, 'closed')} className="btn btn-outline" title="Close Collection">
+                    <Archive size={16} />
+                  </button>
+                )}
+
+                {(col.status === 'closed' || col.status === 'exported') && (
+                  <button onClick={() => updateStatus(col.id, 'active')} className="btn btn-outline text-warning" title="Reopen Collection">
+                    Reopen
+                  </button>
+                )}
+
+                {(col.status === 'closed' || col.status === 'active' || col.status === 'exported') && (
+                  <button onClick={() => downloadCsv(col.id)} className="btn btn-outline" title="Export CSV">
+                    <Download size={16} /> Export
+                  </button>
+                )}
+              </div>
+            </div>
+          ))}
+          {collections.length === 0 && (
+            <p className="text-muted col-span-full">No collections found. Create one to get started.</p>
+          )}
         </div>
-      </main>
+      )}
     </div>
   );
 }

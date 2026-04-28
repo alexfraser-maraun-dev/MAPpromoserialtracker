@@ -2,12 +2,25 @@
 
 import { signIn } from 'next-auth/react';
 import { ShieldAlert } from 'lucide-react';
-import { useSearchParams } from 'next/navigation';
-import { Suspense } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
+import { Suspense, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
 
 function LoginContent() {
   const searchParams = useSearchParams();
   const error = searchParams.get('error');
+  const { data: session, status } = useSession();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (status === 'authenticated') {
+      router.push('/');
+    }
+  }, [status, router]);
+
+  if (status === 'loading' || status === 'authenticated') {
+    return <div className="flex justify-center p-12">Loading...</div>;
+  }
 
   return (
     <div style={{
@@ -33,7 +46,7 @@ function LoginContent() {
             textAlign: 'left'
           }}>
             <ShieldAlert size={20} />
-            <span className="text-sm">Access denied. You must use a @bici.cc email address.</span>
+            <span className="text-sm">Login Error: {error}. If this says AccessDenied, ensure you use a @bici.cc email.</span>
           </div>
         )}
 

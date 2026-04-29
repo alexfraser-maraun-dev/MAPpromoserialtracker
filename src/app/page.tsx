@@ -138,32 +138,32 @@ export default function Home() {
         </label>
       </div>
 
-      <div className="card mb-6 bg-primary bg-opacity-5 border-primary border-opacity-20">
-        <h4 className="text-primary mb-2 text-xs uppercase tracking-widest font-bold">Quick Guide</h4>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+      <div className="card mb-4 p-4 py-3 bg-primary bg-opacity-5 border-primary border-opacity-10">
+        <h4 className="text-primary mb-2 text-[10px] uppercase tracking-widest font-bold">Quick Guide</h4>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-[12px]">
           <div>
-            <strong className="block mb-1">1. Create</strong>
-            <p className="text-muted">Start a new collection with a descriptive name (e.g. "Spring MAP Window").</p>
+            <span className="font-bold mr-1">1. Create:</span>
+            <span className="text-muted">Start a collection with a descriptive name.</span>
           </div>
           <div>
-            <strong className="block mb-1">2. Scan</strong>
-            <p className="text-muted">Click <strong>Start Scanning</strong> to begin recording serials for that collection.</p>
+            <span className="font-bold mr-1">2. Scan:</span>
+            <span className="text-muted">Use <strong>Start Scanning</strong> to record serials.</span>
           </div>
           <div>
-            <strong className="block mb-1">3. Finalize</strong>
-            <p className="text-muted">Use <strong>Export</strong> to download the CSV or <strong>Archive</strong> to hide finished work.</p>
+            <span className="font-bold mr-1">3. Finalize:</span>
+            <span className="text-muted"><strong>Export</strong> CSV or <strong>Archive</strong> when finished.</span>
           </div>
         </div>
       </div>
 
-      <div className="card mb-6">
-        <h3>Create New Collection</h3>
-        <form onSubmit={handleCreate} className="flex gap-4 mt-4 items-center">
+      <div className="card mb-6 p-4">
+        <h3 className="text-base mb-3">Create New Collection</h3>
+        <form onSubmit={handleCreate} className="flex gap-4 items-center">
           <div style={{ flex: 1 }}>
             <input 
               type="text" 
-              placeholder="Collection Name (e.g., Summer MAP Window)" 
-              className="input"
+              placeholder="Name (e.g., Summer MAP Window)" 
+              className="input py-2 text-sm"
               value={newCollectionName}
               onChange={(e) => setNewCollectionName(e.target.value)}
               required
@@ -173,13 +173,13 @@ export default function Home() {
             <input 
               type="text" 
               placeholder="Brand (Optional)" 
-              className="input"
+              className="input py-2 text-sm"
               value={newCollectionBrand}
               onChange={(e) => setNewCollectionBrand(e.target.value)}
             />
           </div>
-          <button type="submit" className="btn btn-primary" disabled={isCreating}>
-            <Plus size={18} className="mr-2" /> Create
+          <button type="submit" className="btn btn-primary py-2" disabled={isCreating}>
+            <Plus size={16} className="mr-1" /> Create
           </button>
         </form>
       </div>
@@ -250,17 +250,15 @@ export default function Home() {
                   <div className="bg-muted bg-opacity-30 rounded-xl p-5 border border-border flex flex-col gap-6 relative">
                     <button 
                       onClick={(e) => { e.preventDefault(); e.stopPropagation(); setActiveRollupId(null); }} 
-                      className="absolute top-4 right-4 bg-surface rounded-full p-1.5 shadow-sm hover:shadow-md transition-all text-muted hover:text-primary border border-border"
-                      title="Close Rollup"
+                      className="absolute top-4 right-4 text-muted hover:text-primary transition-colors"
+                      title="Close"
                     >
-                      <X size={14} />
+                      <X size={12} />
                     </button>
 
                     <div className="flex items-center gap-2 mb-2">
-                      <div className="p-2 bg-primary bg-opacity-10 rounded-lg text-primary">
-                        <BarChart3 size={18} />
-                      </div>
-                      <h4 className="uppercase tracking-widest text-[10px] font-bold text-muted m-0">Collection Analytics</h4>
+                      <BarChart3 size={14} className="text-primary" />
+                      <h4 className="uppercase tracking-widest text-[10px] font-bold text-muted m-0">Collection Summary</h4>
                     </div>
 
                     <div className="flex flex-col gap-6">
@@ -329,13 +327,6 @@ export default function Home() {
                         </section>
                       </div>
                     </div>
-                    
-                    <button 
-                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); setActiveRollupId(null); }} 
-                      className="btn btn-outline btn-sm w-full bg-surface mt-2 hover:bg-muted"
-                    >
-                      Dismiss Analytics
-                    </button>
                   </div>
                 )}
               </div>

@@ -99,7 +99,7 @@ export default function UnmatchedPage() {
     if (!colError && collection) {
       // 2. Validate Brand
       if (collection.restricted_brands) {
-        const allowedBrands = collection.restricted_brands.split(',').map(b => b.trim().toLowerCase());
+        const allowedBrands = collection.restricted_brands.split(',').map((b: string) => b.trim().toLowerCase());
         if (brand && !allowedBrands.includes(brand.trim().toLowerCase())) {
           alert(`RESTRICTION ALERT: The brand "${brand}" is not allowed in this collection. Manual assignment cancelled.`);
           return;
@@ -108,7 +108,7 @@ export default function UnmatchedPage() {
 
       // 3. Validate SKU/UPC
       if (collection.restricted_skus) {
-        const allowedItems = collection.restricted_skus.split(',').map(s => s.trim().toLowerCase());
+        const allowedItems = collection.restricted_skus.split(',').map((s: string) => s.trim().toLowerCase());
         const isSkuAllowed = systemSku && allowedItems.includes(systemSku.toLowerCase());
         const isUpcAllowed = upc && allowedItems.includes(upc.toLowerCase());
         

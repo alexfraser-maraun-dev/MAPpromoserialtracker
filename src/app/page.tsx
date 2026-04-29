@@ -312,21 +312,26 @@ export default function Home() {
 
               {/* Inline Rollup Section */}
               <div 
-                className={`overflow-hidden transition-all duration-500 ease-in-out ${activeRollupId === col.id ? 'max-h-[1200px] mt-6 opacity-100' : 'max-h-0 opacity-0'}`}
+                className={`overflow-hidden transition-all duration-500 ease-in-out ${activeRollupId === col.id ? 'max-h-[2000px] mt-6 opacity-100' : 'max-h-0 opacity-0 invisible'}`}
               >
                 {rollupData[col.id] && (
                   <div className="bg-muted bg-opacity-30 rounded-xl p-5 border border-border flex flex-col gap-6 relative">
-                    <button 
-                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); setActiveRollupId(null); }} 
-                      className="absolute top-3 right-3 p-2 text-muted hover:text-primary transition-colors rounded-full hover:bg-surface z-10"
-                      title="Close Summary"
-                    >
-                      <X size={16} />
-                    </button>
-
-                    <div className="flex items-center gap-2 mb-2">
-                      <BarChart3 size={14} className="text-primary" />
-                      <h4 className="uppercase tracking-widest text-[10px] font-bold text-muted m-0">Collection Summary</h4>
+                    {/* Compact Header with Close Button */}
+                    <div className="flex justify-between items-center mb-2">
+                      <div className="flex items-center gap-2">
+                        <BarChart3 size={14} className="text-primary" />
+                        <h4 className="uppercase tracking-widest text-[10px] font-bold text-muted m-0">Collection Summary</h4>
+                      </div>
+                      <button 
+                        onClick={(e) => { 
+                          e.preventDefault(); 
+                          e.stopPropagation(); 
+                          setActiveRollupId(null); 
+                        }} 
+                        className="btn btn-outline py-1 px-3 text-xs flex items-center gap-1 hover:text-error hover:border-error transition-all"
+                      >
+                        <X size={14} /> Close
+                      </button>
                     </div>
 
                     <div className="flex flex-col gap-6">

@@ -77,6 +77,29 @@ h3 { font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem; }
   background-color: var(--border);
 }
 
+/* Standardized Close Button */
+.btn-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background-color: var(--surface);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s;
+  padding: 0;
+}
+
+.btn-close:hover {
+  background-color: var(--error-bg);
+  color: var(--error);
+  border-color: var(--error);
+  transform: rotate(90deg);
+}
+
 /* Inputs */
 .input {
   width: 100%;

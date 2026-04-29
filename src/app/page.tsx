@@ -176,6 +176,14 @@ export default function Home() {
     setIsRollupLoading(false);
   };
 
+  const closeRollup = (e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    setActiveRollupId(null);
+  };
+
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
@@ -316,22 +324,17 @@ export default function Home() {
               >
                 {rollupData[col.id] && (
                   <div className="bg-muted bg-opacity-30 rounded-xl p-5 border border-border flex flex-col gap-6 relative">
-                    {/* Compact Header with Close Button */}
-                    <div className="flex justify-between items-center mb-2">
-                      <div className="flex items-center gap-2">
-                        <BarChart3 size={14} className="text-primary" />
-                        <h4 className="uppercase tracking-widest text-[10px] font-bold text-muted m-0">Collection Summary</h4>
-                      </div>
-                      <button 
-                        onClick={(e) => { 
-                          e.preventDefault(); 
-                          e.stopPropagation(); 
-                          setActiveRollupId(null); 
-                        }} 
-                        className="btn btn-outline py-1 px-3 text-xs flex items-center gap-1 hover:text-error hover:border-error transition-all"
-                      >
-                        <X size={14} /> Close
-                      </button>
+                    <button 
+                      onClick={closeRollup} 
+                      className="btn-close absolute top-4 right-4 z-10"
+                      title="Close Summary"
+                    >
+                      <X size={16} />
+                    </button>
+
+                    <div className="flex items-center gap-2 mb-2">
+                      <BarChart3 size={14} className="text-primary" />
+                      <h4 className="uppercase tracking-widest text-[10px] font-bold text-muted m-0">Collection Summary</h4>
                     </div>
 
                     <div className="flex flex-col gap-6">
@@ -417,9 +420,10 @@ export default function Home() {
           <div className="card w-full max-w-md shadow-2xl relative">
             <button 
               onClick={() => setEditingCollection(null)}
-              className="absolute top-4 right-4 text-muted hover:text-text"
+              className="btn-close absolute top-4 right-4"
+              title="Close Settings"
             >
-              <X size={20} />
+              <X size={16} />
             </button>
             
             <h2 className="mb-6 flex items-center gap-2">

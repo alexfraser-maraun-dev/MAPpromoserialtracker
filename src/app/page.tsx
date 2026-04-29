@@ -24,7 +24,7 @@ export default function Home() {
   const [newCollectionName, setNewCollectionName] = useState('');
   const [newCollectionBrand, setNewCollectionBrand] = useState('');
   const [showClosed, setShowClosed] = useState(false);
-  const [activeRollupId, setActiveRollupId] = useState<string | null>(null);
+  const [tileMenus, setTileMenus] = useState<Record<string, 'rollup' | 'settings' | null>>({});
   const [rollupData, setRollupData] = useState<Record<string, any>>({});
   const [isRollupLoading, setIsRollupLoading] = useState(false);
   const [editingCollection, setEditingCollection] = useState<Collection | null>(null);
@@ -136,13 +136,13 @@ export default function Home() {
   };
 
   const fetchRollup = async (col: Collection) => {
-    if (activeRollupId === col.id) {
-      setActiveRollupId(null);
+    if (tileMenus[col.id] === 'rollup') {
+      setTileMenus(prev => ({ ...prev, [col.id]: null }));
       return;
     }
 
     if (rollupData[col.id]) {
-      setActiveRollupId(col.id);
+      setTileMenus(prev => ({ ...prev, [col.id]: 'rollup' }));
       return;
     }
 
@@ -171,17 +171,16 @@ export default function Home() {
         ...prev,
         [col.id]: { byProduct, byEmployee, byBrand }
       }));
-      setActiveRollupId(col.id);
+      setTileMenus(prev => ({ ...prev, [col.id]: 'rollup' }));
     }
     setIsRollupLoading(false);
   };
 
-  const closeRollup = (e?: React.MouseEvent) => {
-    if (e) {
-      e.preventDefault();
-      e.stopPropagation();
+  const closeMenu = (id: string) => {
+    setTileMenus(prev => ({ ...prev, [id]: null }));
+    if (editingCollection?.id === id) {
+      setEditingCollection(null);
     }
-    setActiveRollupId(null);
   };
 
   return (
@@ -248,9 +247,9 @@ export default function Home() {
       {isLoading ? (
         <p>Loading collections...</p>
       ) : (
-        <div className="grid grid-cols-1 gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))' }}>
+        <div className="grid grid-cols-1 gap-4 items-start" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))' }}>
           {filteredCollections.map(col => (
-            <div key={col.id} className="card flex flex-col justify-between">
+            <div key={col.id} className="card flex flex-col h-fit">
               <div>
                 <div className="flex justify-between items-center mb-2">
                   <h3 style={{ margin: 0 }}>{col.name}</h3>
@@ -295,10 +294,10 @@ export default function Home() {
 
                 <button 
                   onClick={() => {
-                    setActiveRollupId(null);
                     setEditingCollection(col);
+                    setTileMenus(prev => ({ ...prev, [col.id]: 'settings' }));
                   }} 
-                  className="btn btn-outline" 
+                  className={`btn ${tileMenus[col.id] === 'settings' ? 'btn-primary' : 'btn-outline'}`}
                   title="Settings"
                 >
                   <Settings2 size={16} />
@@ -310,9 +309,9 @@ export default function Home() {
 
                 <button 
                   onClick={() => fetchRollup(col)} 
-                  className={`btn ${activeRollupId === col.id ? 'btn-primary' : 'btn-outline'}`}
+                  className={`btn ${tileMenus[col.id] === 'rollup' ? 'btn-primary' : 'btn-outline'}`}
                   title="Rollup Summary"
-                  disabled={isRollupLoading && activeRollupId !== col.id}
+                  disabled={isRollupLoading && tileMenus[col.id] !== 'rollup'}
                 >
                   <BarChart3 size={16} className="mr-2" /> Rollup
                 </button>
@@ -320,28 +319,17 @@ export default function Home() {
 
               {/* Inline Rollup Section */}
               <div 
-                className={`overflow-hidden transition-all duration-500 ease-in-out ${activeRollupId === col.id ? 'max-h-[2000px] mt-6 opacity-100' : 'max-h-0 opacity-0 invisible'}`}
+                className={`overflow-hidden transition-all duration-500 ease-in-out ${tileMenus[col.id] === 'rollup' ? 'max-h-[2000px] mt-6 opacity-100' : 'max-h-0 opacity-0 invisible'}`}
               >
                 {rollupData[col.id] && (
                   <div className="bg-muted bg-opacity-30 rounded-xl p-5 border border-border flex flex-col gap-6 relative">
-                    <div className="flex justify-between items-start">
-                      <div className="flex items-center gap-2">
-                        <BarChart3 size={14} className="text-primary" />
-                        <h4 className="uppercase tracking-widest text-[10px] font-bold text-muted m-0">Collection Summary</h4>
-                      </div>
-                      <button 
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          setActiveRollupId(null);
-                        }} 
-                        className="btn-close shadow-sm"
-                        style={{ position: 'relative', top: '-10px', right: '-10px', zIndex: 50 }}
-                        title="Close Summary"
-                      >
-                        <X size={16} />
-                      </button>
-                    </div>
+                    <button 
+                      onClick={() => closeMenu(col.id)} 
+                      className="btn-close absolute top-4 right-4 z-10"
+                      title="Close Summary"
+                    >
+                      <X size={16} />
+                    </button>
 
                     <div className="flex flex-col gap-6">
                       <section>
@@ -415,12 +403,12 @@ export default function Home() {
 
               {/* Inline Settings Section */}
               <div 
-                className={`overflow-hidden transition-all duration-500 ease-in-out ${editingCollection?.id === col.id ? 'max-h-[2000px] mt-6 opacity-100' : 'max-h-0 opacity-0 invisible'}`}
+                className={`overflow-hidden transition-all duration-500 ease-in-out ${tileMenus[col.id] === 'settings' ? 'max-h-[2000px] mt-6 opacity-100' : 'max-h-0 opacity-0 invisible'}`}
               >
-                {editingCollection?.id === col.id && (
+                {(tileMenus[col.id] === 'settings' && editingCollection) && (
                   <div className="bg-muted bg-opacity-30 rounded-xl p-5 border border-border flex flex-col gap-6 relative">
                     <button 
-                      onClick={() => setEditingCollection(null)}
+                      onClick={() => closeMenu(col.id)}
                       className="btn-close absolute top-4 right-4 z-10"
                       title="Close Settings"
                     >

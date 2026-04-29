@@ -86,6 +86,8 @@ export default function UnmatchedPage() {
       return;
     }
 
+    // Update ALL unmatched scans with this same normalized serial number
+    // to ensure the fix applies across all collections.
     const { error } = await supabase
       .from('serial_scans')
       .update({
@@ -95,9 +97,10 @@ export default function UnmatchedPage() {
         upc,
         system_sku: systemSku,
         manufacturer_sku: manufacturerSku,
-        match_status: 'manually_assigned'
+        match_status: 'manually_assigned' as any
       })
-      .eq('id', id);
+      .eq('normalized_serial_number', unmatched.find(s => s.id === id)?.normalized_serial_number)
+      .eq('match_status', 'unmatched');
 
     if (!error) {
       setEditingId(null);

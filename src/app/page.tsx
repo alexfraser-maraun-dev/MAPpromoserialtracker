@@ -121,7 +121,7 @@ export default function Home() {
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
-        <h1>Collections</h1>
+        <h1>Serial Number Collections</h1>
         <label className="flex items-center gap-2 text-sm cursor-pointer select-none">
           <input 
             type="checkbox" 
@@ -131,6 +131,24 @@ export default function Home() {
           />
           Show Closed
         </label>
+      </div>
+
+      <div className="card mb-6 bg-primary bg-opacity-5 border-primary border-opacity-20">
+        <h4 className="text-primary mb-2 text-xs uppercase tracking-widest font-bold">Quick Guide</h4>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+          <div>
+            <strong className="block mb-1">1. Create</strong>
+            <p className="text-muted">Start a new collection with a descriptive name (e.g. "Spring MAP Window").</p>
+          </div>
+          <div>
+            <strong className="block mb-1">2. Scan</strong>
+            <p className="text-muted">Click <strong>Start Scanning</strong> to begin recording serials for that collection.</p>
+          </div>
+          <div>
+            <strong className="block mb-1">3. Finalize</strong>
+            <p className="text-muted">Use <strong>Export</strong> to download the CSV or <strong>Archive</strong> to hide finished work.</p>
+          </div>
+        </div>
       </div>
 
       <div className="card mb-6">

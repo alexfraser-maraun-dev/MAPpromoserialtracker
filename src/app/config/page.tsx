@@ -33,6 +33,7 @@ export default function ConfigPage() {
   // Existing rules
   const [rules, setRules] = useState<any[]>([]);
   const [editingRuleId, setEditingRuleId] = useState<string | null>(null);
+  const [conflictWarnings, setConflictWarnings] = useState<{ ruleId: string; description: string; matchValue: string }[]>([]);
 
   useEffect(() => {
     fetchRules();
@@ -41,6 +42,22 @@ export default function ConfigPage() {
   const fetchRules = async () => {
     const { data } = await supabase.from('serial_mapping_rules').select('*').order('priority', { ascending: false });
     if (data) setRules(data);
+  };
+
+  const detectConflicts = (currentValue: string, currentType: string, currentId: string | null, existingRules: any[]) => {
+    if (!currentValue || currentType !== 'prefix') {
+      setConflictWarnings([]);
+      return;
+    }
+    const a = currentValue.toLowerCase();
+    const conflicts = existingRules
+      .filter(r => r.id !== currentId && r.match_type === 'prefix')
+      .filter(r => {
+        const b = r.match_value.toLowerCase();
+        return a.startsWith(b) || b.startsWith(a);
+      })
+      .map(r => ({ ruleId: r.id, description: r.product_description, matchValue: r.match_value }));
+    setConflictWarnings(conflicts);
   };
 
   const handleUpcSearch = async (e: React.FormEvent) => {
@@ -114,6 +131,7 @@ export default function ConfigPage() {
       setTestSerial('');
       setPrefixLength('');
       setEditingRuleId(null);
+      setConflictWarnings([]);
     } else {
       alert('Failed to save mapping rule.');
     }
@@ -133,6 +151,7 @@ export default function ConfigPage() {
     setMatchType(rule.match_type);
     setMatchValue(rule.match_value);
     setPrefixLength('');
+    detectConflicts(rule.match_value, rule.match_type, rule.id, rules);
     // Scroll to top of the form
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -190,6 +209,7 @@ export default function ConfigPage() {
                     setEditingRuleId(null);
                     setProductData(null);
                     setMatchValue('');
+                    setConflictWarnings([]);
                   }} className="text-sm text-muted hover:text-text">Cancel Edit</button>
                 )}
               </div>
@@ -223,13 +243,24 @@ export default function ConfigPage() {
                 />
                 <p className="text-sm text-muted mb-2">2. Define your rule.</p>
                 <div className="flex gap-4 mb-2">
-                  <select className="input" value={matchType} onChange={(e: any) => { setMatchType(e.target.value); setTestResult(null); }} style={{ width: '150px' }}>
-                    <option value="prefix">Prefix Match</option>
+
+                  <select className="input" value={matchType} onChange={(e: any) => { 
+                    const val = e.target.value as any;
+                    setMatchType(val); 
+                    setTestResult(null); 
+                    detectConflicts(matchValue, val, editingRuleId, rules);
+                  }} style={{ width: '150px' }}>
+                    <option value="prefix">Starts With</option>
                     <option value="exact">Exact Match</option>
                     <option value="contains">Contains</option>
                     <option value="regex">Regex</option>
                   </select>
-                  <input className="input flex-1" placeholder="Match Value" value={matchValue} onChange={e => { setMatchValue(e.target.value); setTestResult(null); }} required />
+                  <input className="input flex-1" placeholder="Match Value" value={matchValue} onChange={e => { 
+                    const val = e.target.value;
+                    setMatchValue(val); 
+                    setTestResult(null); 
+                    detectConflicts(val, matchType, editingRuleId, rules);
+                  }} required />
                   
                   {matchType === 'prefix' && (
                     <input 
@@ -254,6 +285,21 @@ export default function ConfigPage() {
 
                 {testResult === 'match' && <p className="text-success flex items-center gap-2 text-sm"><ShieldCheck size={16} /> The example serial matches this rule!</p>}
                 {testResult === 'no-match' && <p className="text-error flex items-center gap-2 text-sm"><AlertTriangle size={16} /> The example serial does NOT match.</p>}
+                
+                {conflictWarnings.length > 0 && (
+                  <div className="mt-4 p-3 rounded-lg" style={{ backgroundColor: 'rgba(234, 179, 8, 0.1)', border: '1px solid #eab308' }}>
+                    <p className="flex items-center gap-2 text-sm font-semibold text-warning mb-2">
+                      <AlertTriangle size={16} /> Rule Conflict Detected
+                    </p>
+                    <div className="flex flex-col gap-1">
+                      {conflictWarnings.map(c => (
+                        <p key={c.ruleId} className="text-xs text-muted">
+                          Overlaps with <strong>"{c.description}"</strong> (prefix: <code>{c.matchValue}</code>). Multiple rules may match the same serial.
+                        </p>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
 
               <button type="submit" className="btn btn-primary mt-4">

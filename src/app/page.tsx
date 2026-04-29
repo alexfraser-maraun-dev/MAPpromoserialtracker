@@ -24,6 +24,7 @@ export default function Home() {
   const [newCollectionName, setNewCollectionName] = useState('');
   const [newCollectionBrand, setNewCollectionBrand] = useState('');
   const [showClosed, setShowClosed] = useState(false);
+  const [activeRollupId, setActiveRollupId] = useState<string | null>(null);
   const [rollupData, setRollupData] = useState<Record<string, any>>({});
   const [isRollupLoading, setIsRollupLoading] = useState(false);
   const [editingCollection, setEditingCollection] = useState<Collection | null>(null);

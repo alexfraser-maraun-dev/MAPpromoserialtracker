@@ -285,7 +285,14 @@ export default function Home() {
                   </button>
                 )}
 
-                <button onClick={() => setEditingCollection(col)} className="btn btn-outline" title="Settings">
+                <button 
+                  onClick={() => {
+                    setActiveRollupId(null);
+                    setEditingCollection(col);
+                  }} 
+                  className="btn btn-outline" 
+                  title="Settings"
+                >
                   <Settings2 size={16} />
                 </button>
 
@@ -311,10 +318,10 @@ export default function Home() {
                   <div className="bg-muted bg-opacity-30 rounded-xl p-5 border border-border flex flex-col gap-6 relative">
                     <button 
                       onClick={(e) => { e.preventDefault(); e.stopPropagation(); setActiveRollupId(null); }} 
-                      className="absolute top-4 right-4 text-muted hover:text-primary transition-colors"
-                      title="Close"
+                      className="absolute top-3 right-3 p-2 text-muted hover:text-primary transition-colors rounded-full hover:bg-surface z-10"
+                      title="Close Summary"
                     >
-                      <X size={12} />
+                      <X size={16} />
                     </button>
 
                     <div className="flex items-center gap-2 mb-2">

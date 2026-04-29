@@ -244,65 +244,98 @@ export default function Home() {
 
               {/* Inline Rollup Section */}
               <div 
-                className={`overflow-hidden transition-all duration-300 ease-in-out ${activeRollupId === col.id ? 'max-h-[1000px] mt-6 opacity-100' : 'max-h-0 opacity-0'}`}
+                className={`overflow-hidden transition-all duration-500 ease-in-out ${activeRollupId === col.id ? 'max-h-[1200px] mt-6 opacity-100' : 'max-h-0 opacity-0'}`}
               >
                 {rollupData[col.id] && (
-                  <div className="flex flex-col gap-6 pt-6 border-t border-border">
-                    <div className="flex items-center justify-between">
-                      <h4 className="flex items-center gap-2 text-primary uppercase tracking-wider text-xs font-bold m-0">
-                        <BarChart3 size={14} /> Collection Summary
-                      </h4>
-                      <button onClick={() => setActiveRollupId(null)} className="text-muted hover:text-text">
-                        <X size={16} />
-                      </button>
+                  <div className="bg-muted bg-opacity-30 rounded-xl p-5 border border-border flex flex-col gap-6 relative">
+                    <button 
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); setActiveRollupId(null); }} 
+                      className="absolute top-4 right-4 bg-surface rounded-full p-1.5 shadow-sm hover:shadow-md transition-all text-muted hover:text-primary border border-border"
+                      title="Close Rollup"
+                    >
+                      <X size={14} />
+                    </button>
+
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="p-2 bg-primary bg-opacity-10 rounded-lg text-primary">
+                        <BarChart3 size={18} />
+                      </div>
+                      <h4 className="uppercase tracking-widest text-[10px] font-bold text-muted m-0">Collection Analytics</h4>
                     </div>
 
-                    <div className="flex flex-col gap-4">
+                    <div className="flex flex-col gap-6">
                       <section>
-                        <span className="text-[10px] text-muted uppercase font-bold mb-2 block">By Product</span>
-                        <div className="flex flex-col gap-1">
+                        <h5 className="text-xs font-semibold mb-3 flex justify-between items-center">
+                          <span>By Product</span>
+                          <span className="text-[10px] text-muted font-normal">Count</span>
+                        </h5>
+                        <div className="flex flex-col gap-3">
                           {Object.entries(rollupData[col.id].byProduct)
                             .sort((a: any, b: any) => b[1] - a[1])
-                            .map(([name, count]: any) => (
-                              <div key={name} className="flex justify-between items-center text-xs py-1 border-b border-border last:border-0 border-opacity-30">
-                                <span className="truncate mr-2" title={name}>{name}</span>
-                                <span className="badge badge-neutral shrink-0" style={{ fontSize: '10px', padding: '1px 6px' }}>{count}</span>
-                              </div>
-                            ))}
+                            .map(([name, count]: any) => {
+                              const counts = Object.values(rollupData[col.id].byProduct) as number[];
+                              const max = Math.max(...counts);
+                              const percent = (count / max) * 100;
+                              return (
+                                <div key={name} className="flex flex-col gap-1.5">
+                                  <div className="flex justify-between items-center text-[11px]">
+                                    <span className="font-medium truncate pr-4" title={name}>{name}</span>
+                                    <span className="font-bold">{count}</span>
+                                  </div>
+                                  <div className="w-full bg-surface rounded-full h-1.5 overflow-hidden border border-border border-opacity-30">
+                                    <div 
+                                      className="bg-primary h-full rounded-full transition-all duration-1000" 
+                                      style={{ width: `${percent}%` }}
+                                    />
+                                  </div>
+                                </div>
+                              );
+                            })}
                         </div>
                       </section>
 
-                      <div className="grid grid-cols-1 gap-4">
+                      <div className="grid grid-cols-1 gap-6">
                         <section>
-                          <span className="text-[10px] text-muted uppercase font-bold mb-2 block">By Employee</span>
-                          <div className="flex flex-col gap-1">
+                          <h5 className="text-xs font-semibold mb-3 flex justify-between items-center">
+                            <span>By Employee</span>
+                          </h5>
+                          <div className="grid grid-cols-1 gap-2">
                             {Object.entries(rollupData[col.id].byEmployee)
                               .sort((a: any, b: any) => b[1] - a[1])
                               .map(([name, count]: any) => (
-                                <div key={name} className="flex justify-between items-center text-xs py-1 border-b border-border last:border-0 border-opacity-30">
-                                  <span className="truncate mr-2">{name}</span>
-                                  <span className="badge badge-neutral shrink-0" style={{ fontSize: '10px', padding: '1px 6px' }}>{count}</span>
+                                <div key={name} className="flex justify-between items-center text-[11px] bg-surface p-2 rounded-lg border border-border border-opacity-50">
+                                  <span className="truncate text-muted">{name}</span>
+                                  <span className="badge badge-neutral shrink-0" style={{ fontSize: '10px' }}>{count}</span>
                                 </div>
                               ))}
                           </div>
                         </section>
 
                         <section>
-                          <span className="text-[10px] text-muted uppercase font-bold mb-2 block">By Brand</span>
-                          <div className="flex flex-col gap-1">
+                          <h5 className="text-xs font-semibold mb-3 flex justify-between items-center">
+                            <span>By Brand</span>
+                          </h5>
+                          <div className="flex flex-wrap gap-2">
                             {Object.entries(rollupData[col.id].byBrand)
                               .sort((a: any, b: any) => b[1] - a[1])
                               .map(([name, count]: any) => (
-                                <div key={name} className="flex justify-between items-center text-xs py-1 border-b border-border last:border-0 border-opacity-30">
-                                  <span className="truncate mr-2">{name}</span>
-                                  <span className="badge badge-neutral shrink-0" style={{ fontSize: '10px', padding: '1px 6px' }}>{count}</span>
+                                <div key={name} className="flex items-center gap-2 bg-surface px-3 py-1.5 rounded-full border border-border border-opacity-50 text-[11px]">
+                                  <span className="font-medium">{name}</span>
+                                  <div className="w-px h-3 bg-border" />
+                                  <span className="font-bold text-primary">{count}</span>
                                 </div>
                               ))}
                           </div>
                         </section>
                       </div>
                     </div>
-                    <button onClick={() => setActiveRollupId(null)} className="btn btn-outline btn-sm w-full mt-2">Close Rollup</button>
+                    
+                    <button 
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); setActiveRollupId(null); }} 
+                      className="btn btn-outline btn-sm w-full bg-surface mt-2 hover:bg-muted"
+                    >
+                      Dismiss Analytics
+                    </button>
                   </div>
                 )}
               </div>

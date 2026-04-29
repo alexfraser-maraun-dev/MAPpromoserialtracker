@@ -324,17 +324,23 @@ export default function Home() {
               >
                 {rollupData[col.id] && (
                   <div className="bg-muted bg-opacity-30 rounded-xl p-5 border border-border flex flex-col gap-6 relative">
-                    <button 
-                      onClick={closeRollup} 
-                      className="btn-close absolute top-4 right-4 z-10"
-                      title="Close Summary"
-                    >
-                      <X size={16} />
-                    </button>
-
-                    <div className="flex items-center gap-2 mb-2">
-                      <BarChart3 size={14} className="text-primary" />
-                      <h4 className="uppercase tracking-widest text-[10px] font-bold text-muted m-0">Collection Summary</h4>
+                    <div className="flex justify-between items-start">
+                      <div className="flex items-center gap-2">
+                        <BarChart3 size={14} className="text-primary" />
+                        <h4 className="uppercase tracking-widest text-[10px] font-bold text-muted m-0">Collection Summary</h4>
+                      </div>
+                      <button 
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setActiveRollupId(null);
+                        }} 
+                        className="btn-close shadow-sm"
+                        style={{ position: 'relative', top: '-10px', right: '-10px', zIndex: 50 }}
+                        title="Close Summary"
+                      >
+                        <X size={16} />
+                      </button>
                     </div>
 
                     <div className="flex flex-col gap-6">

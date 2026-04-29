@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
-import { Plus, Play, Download, Archive } from 'lucide-react';
+import { Plus, Play, Download, Archive, BarChart3, X } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 
 type Collection = {
@@ -22,6 +22,15 @@ export default function Home() {
   const [newCollectionName, setNewCollectionName] = useState('');
   const [newCollectionBrand, setNewCollectionBrand] = useState('');
   const [showClosed, setShowClosed] = useState(false);
+  const [activeRollup, setActiveRollup] = useState<{
+    collection: Collection;
+    stats: {
+      byProduct: Record<string, number>;
+      byEmployee: Record<string, number>;
+      byBrand: Record<string, number>;
+    }
+  } | null>(null);
+  const [isRollupLoading, setIsRollupLoading] = useState(false);
 
   const filteredCollections = showClosed 
     ? collections 
@@ -77,6 +86,36 @@ export default function Home() {
 
   const downloadCsv = (id: string) => {
     window.open(`/api/collections/export/${id}`, '_blank');
+  };
+
+  const fetchRollup = async (col: Collection) => {
+    setIsRollupLoading(true);
+    const { data, error } = await supabase
+      .from('serial_scans')
+      .select('product_description, brand, scanned_by')
+      .eq('collection_id', col.id);
+
+    if (!error && data) {
+      const byProduct: Record<string, number> = {};
+      const byEmployee: Record<string, number> = {};
+      const byBrand: Record<string, number> = {};
+
+      data.forEach(scan => {
+        const prod = scan.product_description || 'Unmatched';
+        const emp = scan.scanned_by || 'Unknown';
+        const brand = scan.brand || 'Unknown';
+
+        byProduct[prod] = (byProduct[prod] || 0) + 1;
+        byEmployee[emp] = (byEmployee[emp] || 0) + 1;
+        byBrand[brand] = (byBrand[brand] || 0) + 1;
+      });
+
+      setActiveRollup({
+        collection: col,
+        stats: { byProduct, byEmployee, byBrand }
+      });
+    }
+    setIsRollupLoading(false);
   };
 
   return (
@@ -169,12 +208,106 @@ export default function Home() {
                     <Download size={16} /> Export
                   </button>
                 )}
+
+                <button 
+                  onClick={() => fetchRollup(col)} 
+                  className="btn btn-outline" 
+                  title="Rollup Summary"
+                  disabled={isRollupLoading}
+                >
+                  <BarChart3 size={16} className="mr-2" /> Rollup
+                </button>
               </div>
             </div>
           ))}
           {collections.length === 0 && (
             <p className="text-muted col-span-full">No collections found. Create one to get started.</p>
           )}
+        </div>
+      )}
+      {/* Rollup Modal */}
+      {activeRollup && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="card w-full max-w-2xl bg-surface max-h-[90vh] overflow-y-auto relative shadow-2xl">
+            <button 
+              onClick={() => setActiveRollup(null)}
+              className="absolute top-4 right-4 text-muted hover:text-text p-2"
+            >
+              <X size={24} />
+            </button>
+
+            <div className="flex items-center gap-3 mb-6 border-b pb-4">
+              <BarChart3 className="text-primary" size={28} />
+              <div>
+                <h2 style={{ margin: 0 }}>Collection Rollup</h2>
+                <p className="text-muted">{activeRollup.collection.name}</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-8">
+              <div>
+                <h4 className="mb-4 text-primary uppercase tracking-wider text-xs">By Product</h4>
+                <div className="flex flex-col gap-2">
+                  {Object.entries(activeRollup.stats.byProduct)
+                    .sort((a, b) => b[1] - a[1])
+                    .map(([name, count]) => (
+                      <div key={name} className="flex justify-between items-center text-sm border-b border-border border-opacity-50 pb-1">
+                        <span className="truncate mr-4" title={name}>{name}</span>
+                        <strong className="shrink-0">{count}</strong>
+                      </div>
+                    ))}
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-8">
+                <div>
+                  <h4 className="mb-4 text-primary uppercase tracking-wider text-xs">By Employee</h4>
+                  <div className="flex flex-col gap-2">
+                    {Object.entries(activeRollup.stats.byEmployee)
+                      .sort((a, b) => b[1] - a[1])
+                      .map(([name, count]) => (
+                        <div key={name} className="flex justify-between items-center text-sm border-b border-border border-opacity-50 pb-1">
+                          <span className="truncate mr-4">{name}</span>
+                          <strong className="shrink-0">{count}</strong>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+
+                <div>
+                  <h4 className="mb-4 text-primary uppercase tracking-wider text-xs">By Brand</h4>
+                  <div className="flex flex-col gap-2">
+                    {Object.entries(activeRollup.stats.byBrand)
+                      .sort((a, b) => b[1] - a[1])
+                      .map(([name, count]) => (
+                        <div key={name} className="flex justify-between items-center text-sm border-b border-border border-opacity-50 pb-1">
+                          <span className="truncate mr-4">{name}</span>
+                          <strong className="shrink-0">{count}</strong>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+
+                <div>
+                  <h4 className="mb-4 text-primary uppercase tracking-wider text-xs">Collection Info</h4>
+                  <div className="text-sm flex flex-col gap-1">
+                    <div className="flex justify-between">
+                      <span className="text-muted">Created</span>
+                      <span>{new Date(activeRollup.collection.created_at).toLocaleDateString()}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted">Status</span>
+                      <span className="capitalize">{activeRollup.collection.status}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-8 pt-4 border-t flex justify-end">
+              <button onClick={() => setActiveRollup(null)} className="btn btn-primary">Done</button>
+            </div>
+          </div>
         </div>
       )}
     </div>

@@ -33,6 +33,9 @@ export default function Navigation() {
           <Link href="/config" className="flex items-center gap-2 text-muted hover:text-text">
             <Settings size={18} /> Mapping Config
           </Link>
+          <Link href="/how-to" className="flex items-center gap-2 text-muted hover:text-text">
+            <QrCode size={18} /> How To
+          </Link>
         </nav>
       </div>
       <div className="flex items-center gap-4">

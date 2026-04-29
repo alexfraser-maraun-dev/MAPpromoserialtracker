@@ -32,6 +32,7 @@ export default function ConfigPage() {
 
   // Existing rules
   const [rules, setRules] = useState<any[]>([]);
+  const [editingRuleId, setEditingRuleId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchRules();
@@ -91,26 +92,49 @@ export default function ConfigPage() {
     const finalMatchValue = getComputedMatchValue();
     if (!productData || !finalMatchValue || !session?.user?.email) return;
 
-    const { error } = await supabase.from('serial_mapping_rules').insert([{
+    const payload = {
       ...productData,
       match_type: matchType,
       match_value: finalMatchValue,
-      priority: 10, // Default priority
+      priority: 10,
       created_by: session.user.email,
       active: true
-    }]);
+    };
+
+    const { error } = editingRuleId 
+      ? await supabase.from('serial_mapping_rules').update(payload).eq('id', editingRuleId)
+      : await supabase.from('serial_mapping_rules').insert([payload]);
 
     if (!error) {
-      alert('Mapping rule saved successfully!');
+      alert(editingRuleId ? 'Mapping rule updated successfully!' : 'Mapping rule saved successfully!');
       fetchRules();
       setProductData(null);
       setUpcInput('');
       setMatchValue('');
       setTestSerial('');
       setPrefixLength('');
+      setEditingRuleId(null);
     } else {
       alert('Failed to save mapping rule.');
     }
+  };
+
+  const startEdit = (rule: any) => {
+    setEditingRuleId(rule.id);
+    setProductData({
+      upc: rule.upc,
+      system_sku: rule.system_sku,
+      manufacturer_sku: rule.manufacturer_sku,
+      product_description: rule.product_description,
+      brand: rule.brand,
+      vendor_id: rule.vendor_id,
+      vendor_name: rule.vendor_name
+    });
+    setMatchType(rule.match_type);
+    setMatchValue(rule.match_value);
+    setPrefixLength('');
+    // Scroll to top of the form
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const testMatch = () => {
@@ -159,7 +183,16 @@ export default function ConfigPage() {
 
           {productData && (
             <form onSubmit={handleSaveRule} className="flex flex-col gap-4 mt-6 border-t pt-4">
-              <h4>Product Data</h4>
+              <div className="flex justify-between items-center">
+                <h4>{editingRuleId ? 'Edit Mapping Rule' : 'Product Data'}</h4>
+                {editingRuleId && (
+                  <button type="button" onClick={() => {
+                    setEditingRuleId(null);
+                    setProductData(null);
+                    setMatchValue('');
+                  }} className="text-sm text-muted hover:text-text">Cancel Edit</button>
+                )}
+              </div>
               <div className="grid grid-cols-2 gap-4">
                 <input className="input" placeholder="Product Description" value={productData.product_description} onChange={e => setProductData({...productData, product_description: e.target.value})} required />
                 <input className="input" placeholder="Brand" value={productData.brand} onChange={e => setProductData({...productData, brand: e.target.value})} />
@@ -223,7 +256,10 @@ export default function ConfigPage() {
                 {testResult === 'no-match' && <p className="text-error flex items-center gap-2 text-sm"><AlertTriangle size={16} /> The example serial does NOT match.</p>}
               </div>
 
-              <button type="submit" className="btn btn-primary mt-4"><Save size={18} className="mr-2" /> Save Rule</button>
+              <button type="submit" className="btn btn-primary mt-4">
+                <Save size={18} className="mr-2" /> 
+                {editingRuleId ? 'Update Mapping Rule' : 'Save Rule'}
+              </button>
             </form>
           )}
         </div>
@@ -237,12 +273,15 @@ export default function ConfigPage() {
                   <strong style={{ paddingRight: '2rem' }}>{rule.product_description}</strong>
                 </div>
                 <div className="text-sm text-muted mb-2">{rule.brand} • {rule.system_sku}</div>
-                <div className="flex justify-between items-center text-sm">
-                  <div className="flex gap-2 items-center">
-                    <span className="badge badge-success">{rule.match_type}</span>
-                    <code>{rule.match_value}</code>
+                <div className="flex justify-between items-center text-sm gap-2 mt-2">
+                  <div className="flex gap-2 items-center flex-wrap">
+                    <span className="badge badge-success" style={{ fontSize: '10px' }}>{rule.match_type}</span>
+                    <code style={{ fontSize: '11px', wordBreak: 'break-all' }}>{rule.match_value}</code>
                   </div>
-                  <button onClick={() => deleteRule(rule.id)} className="text-error hover:underline opacity-0 group-hover:opacity-100 transition-opacity">Delete</button>
+                  <div className="flex gap-3 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button type="button" onClick={() => startEdit(rule)} className="text-primary hover:underline">Edit</button>
+                    <button type="button" onClick={() => deleteRule(rule.id)} className="text-error hover:underline">Delete</button>
+                  </div>
                 </div>
               </div>
             ))}

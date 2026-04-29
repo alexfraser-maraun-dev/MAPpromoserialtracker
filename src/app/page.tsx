@@ -412,6 +412,164 @@ export default function Home() {
                   </div>
                 )}
               </div>
+
+              {/* Inline Settings Section */}
+              <div 
+                className={`overflow-hidden transition-all duration-500 ease-in-out ${editingCollection?.id === col.id ? 'max-h-[2000px] mt-6 opacity-100' : 'max-h-0 opacity-0 invisible'}`}
+              >
+                {editingCollection?.id === col.id && (
+                  <div className="bg-muted bg-opacity-30 rounded-xl p-5 border border-border flex flex-col gap-6 relative">
+                    <button 
+                      onClick={() => setEditingCollection(null)}
+                      className="btn-close absolute top-4 right-4 z-10"
+                      title="Close Settings"
+                    >
+                      <X size={16} />
+                    </button>
+                    
+                    <div className="flex items-center gap-2 mb-2">
+                      <Settings2 size={14} className="text-primary" />
+                      <h4 className="uppercase tracking-widest text-[10px] font-bold text-muted m-0">Collection Settings</h4>
+                    </div>
+                    
+                    <form onSubmit={handleSaveSettings} className="flex flex-col gap-4">
+                      <div>
+                        <label className="text-xs font-bold uppercase text-muted mb-1 block">Collection Name</label>
+                        <input 
+                          type="text" 
+                          className="input w-full py-2 text-sm"
+                          value={editingCollection.name}
+                          onChange={e => setEditingCollection({...editingCollection, name: e.target.value})}
+                          required
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-xs font-bold uppercase text-muted mb-1 block">Default Brand</label>
+                        <input 
+                          type="text" 
+                          className="input w-full py-2 text-sm"
+                          value={editingCollection.brand || ''}
+                          onChange={e => setEditingCollection({...editingCollection, brand: e.target.value || null})}
+                        />
+                      </div>
+
+                      <div className="p-4 bg-surface rounded-lg border border-border mt-2">
+                        <h4 className="text-[10px] font-bold uppercase text-primary mb-4 tracking-widest">Scanning Restrictions</h4>
+                        
+                        <div className="flex flex-col gap-6">
+                          {/* SKU/UPC Restrictions */}
+                          <div>
+                            <label className="text-[9px] font-bold uppercase text-muted mb-2 block">Allowed System SKUs or UPCs</label>
+                            <div className="flex gap-2 mb-2">
+                              <input 
+                                type="text" 
+                                className="input text-xs font-mono py-1 flex-1" 
+                                placeholder="Enter SKU or UPC..." 
+                                value={newSku}
+                                onChange={e => setNewSku(e.target.value)}
+                                onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); const val = newSku.trim(); if (val) { const current = editingCollection.restricted_skus ? editingCollection.restricted_skus.split(',') : []; if (!current.includes(val)) { setEditingCollection({...editingCollection, restricted_skus: [...current, val].join(',')}); } setNewSku(''); } } }}
+                              />
+                              <button 
+                                type="button" 
+                                onClick={() => { const val = newSku.trim(); if (val) { const current = editingCollection.restricted_skus ? editingCollection.restricted_skus.split(',') : []; if (!current.includes(val)) { setEditingCollection({...editingCollection, restricted_skus: [...current, val].join(',')}); } setNewSku(''); } }}
+                                className="btn btn-primary py-1 px-2"
+                              >
+                                <Plus size={14} />
+                              </button>
+                            </div>
+                            <div className="max-h-32 overflow-y-auto border border-border rounded-lg bg-surface">
+                              <table className="w-full text-[11px]">
+                                <tbody className="divide-y divide-border">
+                                  {(editingCollection.restricted_skus ? editingCollection.restricted_skus.split(',') : []).map((sku, idx) => (
+                                    <tr key={idx} className="hover:bg-muted group">
+                                      <td className="px-3 py-2 font-mono">{sku}</td>
+                                      <td className="px-3 py-2 text-right">
+                                        <button 
+                                          type="button" 
+                                          onClick={() => { const current = editingCollection.restricted_skus?.split(',') || []; const updated = current.filter((_, i) => i !== idx).join(','); setEditingCollection({...editingCollection, restricted_skus: updated || null}); }}
+                                          className="text-error opacity-0 group-hover:opacity-100 transition-opacity"
+                                        >
+                                          <Trash2 size={12} />
+                                        </button>
+                                      </td>
+                                    </tr>
+                                  ))}
+                                  {!(editingCollection.restricted_skus) && (
+                                    <tr><td className="px-3 py-2 text-muted italic text-[10px]">No SKU restrictions.</td></tr>
+                                  )}
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+
+                          {/* Brand Restrictions */}
+                          <div>
+                            <label className="text-[9px] font-bold uppercase text-muted mb-2 block">Allowed Brands</label>
+                            <div className="flex gap-2 mb-2">
+                              <input 
+                                type="text" 
+                                className="input text-xs py-1 flex-1" 
+                                placeholder="Enter Brand..." 
+                                value={newBrand}
+                                onChange={e => setNewBrand(e.target.value)}
+                                onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); const val = newBrand.trim(); if (val) { const current = editingCollection.restricted_brands ? editingCollection.restricted_brands.split(',') : []; if (!current.includes(val)) { setEditingCollection({...editingCollection, restricted_brands: [...current, val].join(',')}); } setNewBrand(''); } } }}
+                              />
+                              <button 
+                                type="button" 
+                                onClick={() => { const val = newBrand.trim(); if (val) { const current = editingCollection.restricted_brands ? editingCollection.restricted_brands.split(',') : []; if (!current.includes(val)) { setEditingCollection({...editingCollection, restricted_brands: [...current, val].join(',')}); } setNewBrand(''); } }}
+                                className="btn btn-primary py-1 px-2"
+                              >
+                                <Plus size={14} />
+                              </button>
+                            </div>
+                            <div className="max-h-32 overflow-y-auto border border-border rounded-lg bg-surface">
+                              <table className="w-full text-[11px]">
+                                <tbody className="divide-y divide-border">
+                                  {(editingCollection.restricted_brands ? editingCollection.restricted_brands.split(',') : []).map((brand, idx) => (
+                                    <tr key={idx} className="hover:bg-muted group">
+                                      <td className="px-3 py-2">{brand}</td>
+                                      <td className="px-3 py-2 text-right">
+                                        <button 
+                                          type="button" 
+                                          onClick={() => { const current = editingCollection.restricted_brands?.split(',') || []; const updated = current.filter((_, i) => i !== idx).join(','); setEditingCollection({...editingCollection, restricted_brands: updated || null}); }}
+                                          className="text-error opacity-0 group-hover:opacity-100 transition-opacity"
+                                        >
+                                          <Trash2 size={12} />
+                                        </button>
+                                      </td>
+                                    </tr>
+                                  ))}
+                                  {!(editingCollection.restricted_brands) && (
+                                    <tr><td className="px-3 py-2 text-muted italic text-[10px]">No brand restrictions.</td></tr>
+                                  )}
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex gap-3 mt-4">
+                        <button 
+                          type="button" 
+                          onClick={() => setEditingCollection(null)} 
+                          className="btn btn-outline flex-1 text-xs py-2"
+                        >
+                          Cancel
+                        </button>
+                        <button 
+                          type="submit" 
+                          className="btn btn-primary flex-1 text-xs py-2"
+                          disabled={isSavingSettings}
+                        >
+                          {isSavingSettings ? 'Saving...' : 'Save Settings'}
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                )}
+              </div>
             </div>
           ))}
           {collections.length === 0 && (
@@ -420,160 +578,7 @@ export default function Home() {
         </div>
       )}
 
-      {/* Settings Modal */}
-      {editingCollection && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="card w-full max-w-md shadow-2xl relative">
-            <button 
-              onClick={() => setEditingCollection(null)}
-              className="btn-close absolute top-4 right-4"
-              title="Close Settings"
-            >
-              <X size={16} />
-            </button>
-            
-            <h2 className="mb-6 flex items-center gap-2">
-              <Settings2 className="text-primary" /> Collection Settings
-            </h2>
-            
-            <form onSubmit={handleSaveSettings} className="flex flex-col gap-4">
-              <div>
-                <label className="text-xs font-bold uppercase text-muted mb-1 block">Collection Name</label>
-                <input 
-                  type="text" 
-                  className="input w-full"
-                  value={editingCollection.name}
-                  onChange={e => setEditingCollection({...editingCollection, name: e.target.value})}
-                  required
-                />
-              </div>
 
-              <div>
-                <label className="text-xs font-bold uppercase text-muted mb-1 block">Default Brand</label>
-                <input 
-                  type="text" 
-                  className="input w-full"
-                  value={editingCollection.brand || ''}
-                  onChange={e => setEditingCollection({...editingCollection, brand: e.target.value || null})}
-                />
-              </div>
-
-              <div className="p-4 bg-primary bg-opacity-5 rounded-lg border border-primary border-opacity-10 mt-2">
-                <h4 className="text-xs font-bold uppercase text-primary mb-4">Scanning Restrictions</h4>
-                
-                <div className="flex flex-col gap-6">
-                  {/* SKU/UPC Restrictions Table */}
-                  <div>
-                    <label className="text-[10px] font-bold uppercase text-muted mb-2 block">Allowed System SKUs or UPCs</label>
-                    <div className="flex gap-2 mb-2">
-                      <input 
-                        type="text" 
-                        className="input text-xs font-mono py-1 flex-1" 
-                        placeholder="Enter SKU or UPC..." 
-                        value={newSku}
-                        onChange={e => setNewSku(e.target.value)}
-                        onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); const val = newSku.trim(); if (val) { const current = editingCollection.restricted_skus ? editingCollection.restricted_skus.split(',') : []; if (!current.includes(val)) { setEditingCollection({...editingCollection, restricted_skus: [...current, val].join(',')}); } setNewSku(''); } } }}
-                      />
-                      <button 
-                        type="button" 
-                        onClick={() => { const val = newSku.trim(); if (val) { const current = editingCollection.restricted_skus ? editingCollection.restricted_skus.split(',') : []; if (!current.includes(val)) { setEditingCollection({...editingCollection, restricted_skus: [...current, val].join(',')}); } setNewSku(''); } }}
-                        className="btn btn-primary btn-sm px-2"
-                      >
-                        <Plus size={14} />
-                      </button>
-                    </div>
-                    <div className="max-h-32 overflow-y-auto border border-border rounded-lg bg-surface">
-                      <table className="w-full text-[11px]">
-                        <tbody className="divide-y divide-border">
-                          {(editingCollection.restricted_skus ? editingCollection.restricted_skus.split(',') : []).map((sku, idx) => (
-                            <tr key={idx} className="hover:bg-muted group">
-                              <td className="px-3 py-2 font-mono">{sku}</td>
-                              <td className="px-3 py-2 text-right">
-                                <button 
-                                  type="button" 
-                                  onClick={() => { const current = editingCollection.restricted_skus?.split(',') || []; const updated = current.filter((_, i) => i !== idx).join(','); setEditingCollection({...editingCollection, restricted_skus: updated || null}); }}
-                                  className="text-error opacity-0 group-hover:opacity-100 transition-opacity"
-                                >
-                                  <Trash2 size={12} />
-                                </button>
-                              </td>
-                            </tr>
-                          ))}
-                          {!(editingCollection.restricted_skus) && (
-                            <tr><td className="px-3 py-2 text-muted italic">No SKU restrictions set.</td></tr>
-                          )}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-
-                  {/* Brand Restrictions Table */}
-                  <div>
-                    <label className="text-[10px] font-bold uppercase text-muted mb-2 block">Allowed Brands</label>
-                    <div className="flex gap-2 mb-2">
-                      <input 
-                        type="text" 
-                        className="input text-xs py-1 flex-1" 
-                        placeholder="Enter Brand..." 
-                        value={newBrand}
-                        onChange={e => setNewBrand(e.target.value)}
-                        onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); const val = newBrand.trim(); if (val) { const current = editingCollection.restricted_brands ? editingCollection.restricted_brands.split(',') : []; if (!current.includes(val)) { setEditingCollection({...editingCollection, restricted_brands: [...current, val].join(',')}); } setNewBrand(''); } } }}
-                      />
-                      <button 
-                        type="button" 
-                        onClick={() => { const val = newBrand.trim(); if (val) { const current = editingCollection.restricted_brands ? editingCollection.restricted_brands.split(',') : []; if (!current.includes(val)) { setEditingCollection({...editingCollection, restricted_brands: [...current, val].join(',')}); } setNewBrand(''); } }}
-                        className="btn btn-primary btn-sm px-2"
-                      >
-                        <Plus size={14} />
-                      </button>
-                    </div>
-                    <div className="max-h-32 overflow-y-auto border border-border rounded-lg bg-surface">
-                      <table className="w-full text-[11px]">
-                        <tbody className="divide-y divide-border">
-                          {(editingCollection.restricted_brands ? editingCollection.restricted_brands.split(',') : []).map((brand, idx) => (
-                            <tr key={idx} className="hover:bg-muted group">
-                              <td className="px-3 py-2">{brand}</td>
-                              <td className="px-3 py-2 text-right">
-                                <button 
-                                  type="button" 
-                                  onClick={() => { const current = editingCollection.restricted_brands?.split(',') || []; const updated = current.filter((_, i) => i !== idx).join(','); setEditingCollection({...editingCollection, restricted_brands: updated || null}); }}
-                                  className="text-error opacity-0 group-hover:opacity-100 transition-opacity"
-                                >
-                                  <Trash2 size={12} />
-                                </button>
-                              </td>
-                            </tr>
-                          ))}
-                          {!(editingCollection.restricted_brands) && (
-                            <tr><td className="px-3 py-2 text-muted italic">No brand restrictions set.</td></tr>
-                          )}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex gap-3 mt-4">
-                <button 
-                  type="button" 
-                  onClick={() => setEditingCollection(null)} 
-                  className="btn btn-outline flex-1"
-                >
-                  Cancel
-                </button>
-                <button 
-                  type="submit" 
-                  className="btn btn-primary flex-1"
-                  disabled={isSavingSettings}
-                >
-                  {isSavingSettings ? 'Saving...' : 'Save Settings'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
 
     </div>
   );

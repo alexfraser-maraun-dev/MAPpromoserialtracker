@@ -31,6 +31,7 @@ export default function Home() {
   const [isSavingSettings, setIsSavingSettings] = useState(false);
   const [newSku, setNewSku] = useState('');
   const [newBrand, setNewBrand] = useState('');
+  const [skuDescriptions, setSkuDescriptions] = useState<Record<string, string>>({});
 
   const filteredCollections = showClosed 
     ? collections 
@@ -39,6 +40,31 @@ export default function Home() {
   useEffect(() => {
     fetchCollections();
   }, []);
+
+  useEffect(() => {
+    if (editingCollection?.restricted_skus) {
+      const ids = editingCollection.restricted_skus.split(',').filter(id => id && !skuDescriptions[id]);
+      ids.forEach(id => fetchSkuDescription(id));
+    }
+  }, [editingCollection?.id]);
+
+  const fetchSkuDescription = async (id: string) => {
+    if (skuDescriptions[id]) return;
+    try {
+      // Try UPC first, then system SKU
+      const res = await fetch(`/api/bigquery/lookup?upc=${encodeURIComponent(id)}`);
+      const data = await res.json();
+      if (data.found) {
+        setSkuDescriptions(prev => ({ ...prev, [id]: data.product.product_description }));
+      } else {
+        const res2 = await fetch(`/api/bigquery/lookup?sku=${encodeURIComponent(id)}`);
+        const data2 = await res2.json();
+        if (data2.found) {
+          setSkuDescriptions(prev => ({ ...prev, [id]: data2.product.product_description }));
+        }
+      }
+    } catch (e) {}
+  };
 
   const fetchCollections = async () => {
     setIsLoading(true);
@@ -456,22 +482,46 @@ export default function Home() {
                                 placeholder="Enter SKU or UPC..." 
                                 value={newSku}
                                 onChange={e => setNewSku(e.target.value)}
-                                onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); const val = newSku.trim(); if (val) { const current = editingCollection.restricted_skus ? editingCollection.restricted_skus.split(',') : []; if (!current.includes(val)) { setEditingCollection({...editingCollection, restricted_skus: [...current, val].join(',')}); } setNewSku(''); } } }}
+                                onKeyDown={e => { if (e.key === 'Enter') { 
+                                  e.preventDefault(); 
+                                  const val = newSku.trim(); 
+                                  if (val) { 
+                                    const current = editingCollection.restricted_skus ? editingCollection.restricted_skus.split(',') : []; 
+                                    if (!current.includes(val)) { 
+                                      setEditingCollection({...editingCollection, restricted_skus: [...current, val].join(',')}); 
+                                      fetchSkuDescription(val);
+                                    } 
+                                    setNewSku(''); 
+                                  } 
+                                } }}
                               />
                               <button 
                                 type="button" 
-                                onClick={() => { const val = newSku.trim(); if (val) { const current = editingCollection.restricted_skus ? editingCollection.restricted_skus.split(',') : []; if (!current.includes(val)) { setEditingCollection({...editingCollection, restricted_skus: [...current, val].join(',')}); } setNewSku(''); } }}
+                                onClick={() => { 
+                                  const val = newSku.trim(); 
+                                  if (val) { 
+                                    const current = editingCollection.restricted_skus ? editingCollection.restricted_skus.split(',') : []; 
+                                    if (!current.includes(val)) { 
+                                      setEditingCollection({...editingCollection, restricted_skus: [...current, val].join(',')}); 
+                                      fetchSkuDescription(val);
+                                    } 
+                                    setNewSku(''); 
+                                  } 
+                                }}
                                 className="btn btn-primary py-1 px-2"
                               >
                                 <Plus size={14} />
                               </button>
                             </div>
-                            <div className="max-h-32 overflow-y-auto border border-border rounded-lg bg-surface">
+                            <div className="max-h-48 overflow-y-auto border border-border rounded-lg bg-surface">
                               <table className="w-full text-[11px]">
                                 <tbody className="divide-y divide-border">
                                   {(editingCollection.restricted_skus ? editingCollection.restricted_skus.split(',') : []).map((sku, idx) => (
                                     <tr key={idx} className="hover:bg-muted group">
-                                      <td className="px-3 py-2 font-mono">{sku}</td>
+                                      <td className="px-3 py-2">
+                                        <div className="font-semibold text-text">{skuDescriptions[sku] || 'Loading...'}</div>
+                                        <div className="text-[9px] text-muted font-mono">{sku}</div>
+                                      </td>
                                       <td className="px-3 py-2 text-right">
                                         <button 
                                           type="button" 

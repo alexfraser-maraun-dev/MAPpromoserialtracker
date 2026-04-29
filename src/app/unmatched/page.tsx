@@ -86,8 +86,40 @@ export default function UnmatchedPage() {
       return;
     }
 
-    // Update ALL unmatched scans with this same normalized serial number
-    // to ensure the fix applies across all collections.
+    const currentScan = unmatched.find(s => s.id === id);
+    if (!currentScan) return;
+
+    // 1. Fetch collection restrictions for THIS scan's collection
+    const { data: collection, error: colError } = await supabase
+      .from('collections')
+      .select('restricted_skus, restricted_brands')
+      .eq('id', currentScan.collection_id)
+      .single();
+
+    if (!colError && collection) {
+      // 2. Validate Brand
+      if (collection.restricted_brands) {
+        const allowedBrands = collection.restricted_brands.split(',').map(b => b.trim().toLowerCase());
+        if (brand && !allowedBrands.includes(brand.trim().toLowerCase())) {
+          alert(`RESTRICTION ALERT: The brand "${brand}" is not allowed in this collection. Manual assignment cancelled.`);
+          return;
+        }
+      }
+
+      // 3. Validate SKU/UPC
+      if (collection.restricted_skus) {
+        const allowedItems = collection.restricted_skus.split(',').map(s => s.trim().toLowerCase());
+        const isSkuAllowed = systemSku && allowedItems.includes(systemSku.toLowerCase());
+        const isUpcAllowed = upc && allowedItems.includes(upc.toLowerCase());
+        
+        if (!isSkuAllowed && !isUpcAllowed) {
+          alert(`RESTRICTION ALERT: The SKU "${systemSku}" or UPC "${upc}" is not allowed in this collection. Manual assignment cancelled.`);
+          return;
+        }
+      }
+    }
+
+    // Update the scan(s)
     const { error } = await supabase
       .from('serial_scans')
       .update({
@@ -99,8 +131,7 @@ export default function UnmatchedPage() {
         manufacturer_sku: manufacturerSku,
         match_status: 'manually_assigned' as any
       })
-      .eq('normalized_serial_number', unmatched.find(s => s.id === id)?.normalized_serial_number)
-      .eq('match_status', 'unmatched');
+      .eq('id', id); // Only update this specific scan to be safe with restrictions
 
     if (!error) {
       setEditingId(null);

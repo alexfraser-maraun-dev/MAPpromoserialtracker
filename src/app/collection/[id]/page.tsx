@@ -15,6 +15,7 @@ type Scan = {
   brand: string;
   qty_sold: number;
   scanned_at: string;
+  scanned_by: string;
 };
 
 export default function CollectionViewPage({ params }: { params: Promise<{ id: string }> }) {
@@ -66,6 +67,7 @@ export default function CollectionViewPage({ params }: { params: Promise<{ id: s
                   <th className="pb-2">Product Description</th>
                   <th className="pb-2">Brand</th>
                   <th className="pb-2">Status</th>
+                  <th className="pb-2">Scanned By</th>
                   <th className="pb-2">Scanned At</th>
                 </tr>
               </thead>
@@ -80,6 +82,7 @@ export default function CollectionViewPage({ params }: { params: Promise<{ id: s
                         {scan.match_status}
                       </span>
                     </td>
+                    <td className="py-3 text-sm">{scan.scanned_by}</td>
                     <td className="py-3 text-sm text-muted">{new Date(scan.scanned_at).toLocaleString()}</td>
                   </tr>
                 ))}

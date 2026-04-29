@@ -19,7 +19,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
   const { data: scans, error } = await supabase
     .from('serial_scans')
-    .select('brand, vendor_id, product_description, serial_number, qty_sold')
+    .select('brand, vendor_id, product_description, serial_number, qty_sold, scanned_by, scanned_at')
     .eq('collection_id', collectionId);
 
   if (error || !scans) {
@@ -27,7 +27,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   }
 
   // Generate CSV
-  const header = ['brand', 'vendor_id', 'product_description', 'serial_number', 'qty_sold'];
+  const header = ['brand', 'vendor_id', 'product_description', 'serial_number', 'qty_sold', 'scanned_by', 'scanned_at'];
   
   const escapeCsv = (val: any) => {
     if (val === null || val === undefined) return '';

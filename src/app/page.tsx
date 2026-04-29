@@ -22,14 +22,8 @@ export default function Home() {
   const [newCollectionName, setNewCollectionName] = useState('');
   const [newCollectionBrand, setNewCollectionBrand] = useState('');
   const [showClosed, setShowClosed] = useState(false);
-  const [activeRollup, setActiveRollup] = useState<{
-    collection: Collection;
-    stats: {
-      byProduct: Record<string, number>;
-      byEmployee: Record<string, number>;
-      byBrand: Record<string, number>;
-    }
-  } | null>(null);
+  const [activeRollupId, setActiveRollupId] = useState<string | null>(null);
+  const [rollupData, setRollupData] = useState<Record<string, any>>({});
   const [isRollupLoading, setIsRollupLoading] = useState(false);
 
   const filteredCollections = showClosed 
@@ -89,6 +83,16 @@ export default function Home() {
   };
 
   const fetchRollup = async (col: Collection) => {
+    if (activeRollupId === col.id) {
+      setActiveRollupId(null);
+      return;
+    }
+
+    if (rollupData[col.id]) {
+      setActiveRollupId(col.id);
+      return;
+    }
+
     setIsRollupLoading(true);
     const { data, error } = await supabase
       .from('serial_scans')
@@ -110,10 +114,11 @@ export default function Home() {
         byBrand[brand] = (byBrand[brand] || 0) + 1;
       });
 
-      setActiveRollup({
-        collection: col,
-        stats: { byProduct, byEmployee, byBrand }
-      });
+      setRollupData(prev => ({
+        ...prev,
+        [col.id]: { byProduct, byEmployee, byBrand }
+      }));
+      setActiveRollupId(col.id);
     }
     setIsRollupLoading(false);
   };
@@ -229,12 +234,77 @@ export default function Home() {
 
                 <button 
                   onClick={() => fetchRollup(col)} 
-                  className="btn btn-outline" 
+                  className={`btn ${activeRollupId === col.id ? 'btn-primary' : 'btn-outline'}`}
                   title="Rollup Summary"
-                  disabled={isRollupLoading}
+                  disabled={isRollupLoading && activeRollupId !== col.id}
                 >
                   <BarChart3 size={16} className="mr-2" /> Rollup
                 </button>
+              </div>
+
+              {/* Inline Rollup Section */}
+              <div 
+                className={`overflow-hidden transition-all duration-300 ease-in-out ${activeRollupId === col.id ? 'max-h-[1000px] mt-6 opacity-100' : 'max-h-0 opacity-0'}`}
+              >
+                {rollupData[col.id] && (
+                  <div className="flex flex-col gap-6 pt-6 border-t border-border">
+                    <div className="flex items-center justify-between">
+                      <h4 className="flex items-center gap-2 text-primary uppercase tracking-wider text-xs font-bold m-0">
+                        <BarChart3 size={14} /> Collection Summary
+                      </h4>
+                      <button onClick={() => setActiveRollupId(null)} className="text-muted hover:text-text">
+                        <X size={16} />
+                      </button>
+                    </div>
+
+                    <div className="flex flex-col gap-4">
+                      <section>
+                        <span className="text-[10px] text-muted uppercase font-bold mb-2 block">By Product</span>
+                        <div className="flex flex-col gap-1">
+                          {Object.entries(rollupData[col.id].byProduct)
+                            .sort((a: any, b: any) => b[1] - a[1])
+                            .map(([name, count]: any) => (
+                              <div key={name} className="flex justify-between items-center text-xs py-1 border-b border-border last:border-0 border-opacity-30">
+                                <span className="truncate mr-2" title={name}>{name}</span>
+                                <span className="badge badge-neutral shrink-0" style={{ fontSize: '10px', padding: '1px 6px' }}>{count}</span>
+                              </div>
+                            ))}
+                        </div>
+                      </section>
+
+                      <div className="grid grid-cols-1 gap-4">
+                        <section>
+                          <span className="text-[10px] text-muted uppercase font-bold mb-2 block">By Employee</span>
+                          <div className="flex flex-col gap-1">
+                            {Object.entries(rollupData[col.id].byEmployee)
+                              .sort((a: any, b: any) => b[1] - a[1])
+                              .map(([name, count]: any) => (
+                                <div key={name} className="flex justify-between items-center text-xs py-1 border-b border-border last:border-0 border-opacity-30">
+                                  <span className="truncate mr-2">{name}</span>
+                                  <span className="badge badge-neutral shrink-0" style={{ fontSize: '10px', padding: '1px 6px' }}>{count}</span>
+                                </div>
+                              ))}
+                          </div>
+                        </section>
+
+                        <section>
+                          <span className="text-[10px] text-muted uppercase font-bold mb-2 block">By Brand</span>
+                          <div className="flex flex-col gap-1">
+                            {Object.entries(rollupData[col.id].byBrand)
+                              .sort((a: any, b: any) => b[1] - a[1])
+                              .map(([name, count]: any) => (
+                                <div key={name} className="flex justify-between items-center text-xs py-1 border-b border-border last:border-0 border-opacity-30">
+                                  <span className="truncate mr-2">{name}</span>
+                                  <span className="badge badge-neutral shrink-0" style={{ fontSize: '10px', padding: '1px 6px' }}>{count}</span>
+                                </div>
+                              ))}
+                          </div>
+                        </section>
+                      </div>
+                    </div>
+                    <button onClick={() => setActiveRollupId(null)} className="btn btn-outline btn-sm w-full mt-2">Close Rollup</button>
+                  </div>
+                )}
               </div>
             </div>
           ))}
@@ -243,103 +313,7 @@ export default function Home() {
           )}
         </div>
       )}
-      {/* Rollup Modal */}
-      {activeRollup && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="card w-full max-w-2xl bg-surface max-h-[90vh] overflow-y-auto relative shadow-2xl">
-            <button 
-              onClick={() => setActiveRollup(null)}
-              className="absolute top-4 right-4 text-muted hover:text-text p-2"
-            >
-              <X size={24} />
-            </button>
 
-            <div className="flex items-center gap-3 mb-6 border-b pb-4">
-              <BarChart3 className="text-primary" size={28} />
-              <div>
-                <h2 style={{ margin: 0 }}>Collection Rollup</h2>
-                <p className="text-muted">{activeRollup.collection.name}</p>
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-8">
-              <section>
-                <h4 className="flex items-center gap-2 mb-3 text-primary uppercase tracking-wider text-xs font-bold">
-                  <Play size={14} /> By Product
-                </h4>
-                <div className="card" style={{ backgroundColor: 'var(--background)', padding: '0.75rem' }}>
-                  <div className="flex flex-col gap-1">
-                    {Object.entries(activeRollup.stats.byProduct)
-                      .sort((a, b) => b[1] - a[1])
-                      .map(([name, count]) => (
-                        <div key={name} className="flex justify-between items-center text-sm py-1 border-b border-border last:border-0 border-opacity-30">
-                          <span className="truncate mr-4" title={name}>{name}</span>
-                          <span className="badge badge-neutral shrink-0">{count}</span>
-                        </div>
-                      ))}
-                  </div>
-                </div>
-              </section>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <section>
-                  <h4 className="flex items-center gap-2 mb-3 text-primary uppercase tracking-wider text-xs font-bold">
-                    <Archive size={14} /> By Employee
-                  </h4>
-                  <div className="card" style={{ backgroundColor: 'var(--background)', padding: '0.75rem' }}>
-                    <div className="flex flex-col gap-1">
-                      {Object.entries(activeRollup.stats.byEmployee)
-                        .sort((a, b) => b[1] - a[1])
-                        .map(([name, count]) => (
-                          <div key={name} className="flex justify-between items-center text-sm py-1 border-b border-border last:border-0 border-opacity-30">
-                            <span className="truncate mr-4">{name}</span>
-                            <span className="badge badge-neutral shrink-0">{count}</span>
-                          </div>
-                        ))}
-                    </div>
-                  </div>
-                </section>
-
-                <section>
-                  <h4 className="flex items-center gap-2 mb-3 text-primary uppercase tracking-wider text-xs font-bold">
-                    <BarChart3 size={14} /> By Brand
-                  </h4>
-                  <div className="card" style={{ backgroundColor: 'var(--background)', padding: '0.75rem' }}>
-                    <div className="flex flex-col gap-1">
-                      {Object.entries(activeRollup.stats.byBrand)
-                        .sort((a, b) => b[1] - a[1])
-                        .map(([name, count]) => (
-                          <div key={name} className="flex justify-between items-center text-sm py-1 border-b border-border last:border-0 border-opacity-30">
-                            <span className="truncate mr-4">{name}</span>
-                            <span className="badge badge-neutral shrink-0">{count}</span>
-                          </div>
-                        ))}
-                    </div>
-                  </div>
-                </section>
-              </div>
-
-              <section className="bg-muted p-4 rounded-lg">
-                <h4 className="mb-3 text-primary uppercase tracking-wider text-xs font-bold">Collection Details</h4>
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div className="flex flex-col">
-                    <span className="text-muted text-xs">Created Date</span>
-                    <span className="font-medium">{new Date(activeRollup.collection.created_at).toLocaleDateString()}</span>
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-muted text-xs">Current Status</span>
-                    <span className="font-medium capitalize">{activeRollup.collection.status}</span>
-                  </div>
-                </div>
-              </section>
-            </div>
-
-            <div className="mt-8 pt-4 border-t flex justify-end">
-              <button onClick={() => setActiveRollup(null)} className="btn btn-primary">Done</button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

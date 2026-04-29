@@ -10,6 +10,8 @@ CREATE TABLE collections (
   starts_at TIMESTAMP WITH TIME ZONE,
   ends_at TIMESTAMP WITH TIME ZONE,
   created_by VARCHAR(255) NOT NULL, -- Email of the user who created it
+  restricted_skus TEXT,            -- Comma-separated list of allowed System SKUs
+  restricted_brands TEXT,          -- Comma-separated list of allowed brands
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );

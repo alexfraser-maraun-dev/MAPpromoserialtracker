@@ -148,6 +148,39 @@ export default function ScanPage({ params }: { params: Promise<{ id: string }> }
     
     setScans(prev => [newScanRow, ...prev]);
 
+    // Restriction Enforcement Check
+    if (collection && matchedRule) {
+      // 1. Brand Restrictions
+      if (collection.restricted_brands) {
+        const allowedBrands = collection.restricted_brands.split(',').map((b: string) => b.trim().toLowerCase());
+        const scanBrand = matchedRule.brand?.toLowerCase();
+        if (scanBrand && !allowedBrands.includes(scanBrand)) {
+           setScans(prev => prev.map(s => s.id === uiId ? { 
+             ...s, 
+             status: 'error' as ScanRow['status'], 
+             product_description: `Restricted: Brand "${matchedRule.brand}" is not allowed here.` 
+           } : s));
+           sessionScans.current.delete(normalized);
+           return;
+        }
+      }
+
+      // 2. SKU Restrictions
+      if (collection.restricted_skus) {
+        const allowedSkus = collection.restricted_skus.split(',').map((s: string) => s.trim().toLowerCase());
+        const scanSku = matchedRule.system_sku?.toLowerCase();
+        if (scanSku && !allowedSkus.includes(scanSku)) {
+           setScans(prev => prev.map(s => s.id === uiId ? { 
+             ...s, 
+             status: 'error' as ScanRow['status'], 
+             product_description: `Restricted: SKU "${matchedRule.system_sku}" is not allowed here.` 
+           } : s));
+           sessionScans.current.delete(normalized);
+           return;
+        }
+      }
+    }
+
     // Async Database Upload
     const match_status: ScanRow['status'] = matchedRule ? 'matched' : 'unmatched';
     

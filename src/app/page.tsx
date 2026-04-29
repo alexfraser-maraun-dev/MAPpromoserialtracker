@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
-import { Plus, Play, Download, Archive, BarChart3, X } from 'lucide-react';
+import { Plus, Play, Download, Archive, BarChart3, X, Settings2 } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 
 type Collection = {
@@ -11,6 +11,8 @@ type Collection = {
   name: string;
   brand: string | null;
   status: 'draft' | 'active' | 'closed' | 'exported';
+  restricted_skus: string | null;
+  restricted_brands: string | null;
   created_at: string;
 };
 
@@ -22,9 +24,10 @@ export default function Home() {
   const [newCollectionName, setNewCollectionName] = useState('');
   const [newCollectionBrand, setNewCollectionBrand] = useState('');
   const [showClosed, setShowClosed] = useState(false);
-  const [activeRollupId, setActiveRollupId] = useState<string | null>(null);
   const [rollupData, setRollupData] = useState<Record<string, any>>({});
   const [isRollupLoading, setIsRollupLoading] = useState(false);
+  const [editingCollection, setEditingCollection] = useState<Collection | null>(null);
+  const [isSavingSettings, setIsSavingSettings] = useState(false);
 
   const filteredCollections = showClosed 
     ? collections 
@@ -76,6 +79,28 @@ export default function Home() {
   const updateStatus = async (id: string, status: string) => {
     await supabase.from('collections').update({ status }).eq('id', id);
     fetchCollections();
+  };
+
+  const handleSaveSettings = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingCollection) return;
+
+    setIsSavingSettings(true);
+    const { error } = await supabase
+      .from('collections')
+      .update({
+        name: editingCollection.name,
+        brand: editingCollection.brand,
+        restricted_skus: editingCollection.restricted_skus,
+        restricted_brands: editingCollection.restricted_brands
+      })
+      .eq('id', editingCollection.id);
+
+    if (!error) {
+      fetchCollections();
+      setEditingCollection(null);
+    }
+    setIsSavingSettings(false);
   };
 
   const downloadCsv = (id: string) => {
@@ -232,6 +257,10 @@ export default function Home() {
                   </button>
                 )}
 
+                <button onClick={() => setEditingCollection(col)} className="btn btn-outline" title="Settings">
+                  <Settings2 size={16} />
+                </button>
+
                 <button 
                   onClick={() => fetchRollup(col)} 
                   className={`btn ${activeRollupId === col.id ? 'btn-primary' : 'btn-outline'}`}
@@ -335,6 +364,94 @@ export default function Home() {
           {collections.length === 0 && (
             <p className="text-muted col-span-full">No collections found. Create one to get started.</p>
           )}
+        </div>
+      )}
+
+      {/* Settings Modal */}
+      {editingCollection && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="card w-full max-w-md shadow-2xl relative">
+            <button 
+              onClick={() => setEditingCollection(null)}
+              className="absolute top-4 right-4 text-muted hover:text-text"
+            >
+              <X size={20} />
+            </button>
+            
+            <h2 className="mb-6 flex items-center gap-2">
+              <Settings2 className="text-primary" /> Collection Settings
+            </h2>
+            
+            <form onSubmit={handleSaveSettings} className="flex flex-col gap-4">
+              <div>
+                <label className="text-xs font-bold uppercase text-muted mb-1 block">Collection Name</label>
+                <input 
+                  type="text" 
+                  className="input w-full"
+                  value={editingCollection.name}
+                  onChange={e => setEditingCollection({...editingCollection, name: e.target.value})}
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-bold uppercase text-muted mb-1 block">Default Brand</label>
+                <input 
+                  type="text" 
+                  className="input w-full"
+                  value={editingCollection.brand || ''}
+                  onChange={e => setEditingCollection({...editingCollection, brand: e.target.value || null})}
+                />
+              </div>
+
+              <div className="p-4 bg-primary bg-opacity-5 rounded-lg border border-primary border-opacity-10 mt-2">
+                <h4 className="text-xs font-bold uppercase text-primary mb-3">Scanning Restrictions</h4>
+                
+                <div className="flex flex-col gap-4">
+                  <div>
+                    <label className="text-[10px] font-bold uppercase text-muted mb-1 block">Restrict to System SKUs (Optional)</label>
+                    <textarea 
+                      className="input w-full text-xs font-mono"
+                      placeholder="e.g. SKU123, SKU456"
+                      rows={2}
+                      value={editingCollection.restricted_skus || ''}
+                      onChange={e => setEditingCollection({...editingCollection, restricted_skus: e.target.value || null})}
+                    />
+                    <p className="text-[10px] text-muted mt-1 italic">Leave blank to allow any SKU. Separate multiple with commas.</p>
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] font-bold uppercase text-muted mb-1 block">Restrict to Brands (Optional)</label>
+                    <input 
+                      type="text" 
+                      className="input w-full text-xs"
+                      placeholder="e.g. Garmin, Hammerhead"
+                      value={editingCollection.restricted_brands || ''}
+                      onChange={e => setEditingCollection({...editingCollection, restricted_brands: e.target.value || null})}
+                    />
+                    <p className="text-[10px] text-muted mt-1 italic">Leave blank to allow any brand. Separate multiple with commas.</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex gap-3 mt-4">
+                <button 
+                  type="button" 
+                  onClick={() => setEditingCollection(null)} 
+                  className="btn btn-outline flex-1"
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit" 
+                  className="btn btn-primary flex-1"
+                  disabled={isSavingSettings}
+                >
+                  {isSavingSettings ? 'Saving...' : 'Save Settings'}
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
 

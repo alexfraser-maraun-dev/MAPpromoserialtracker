@@ -165,15 +165,21 @@ export default function ScanPage({ params }: { params: Promise<{ id: string }> }
         }
       }
 
-      // 2. SKU Restrictions
+      // 2. SKU/UPC Restrictions
       if (collection.restricted_skus) {
-        const allowedSkus = collection.restricted_skus.split(',').map((s: string) => s.trim().toLowerCase());
+        const allowedItems = collection.restricted_skus.split(',').map((s: string) => s.trim().toLowerCase());
         const scanSku = matchedRule.system_sku?.toLowerCase();
-        if (scanSku && !allowedSkus.includes(scanSku)) {
+        const scanUpc = matchedRule.upc?.toLowerCase();
+        
+        // Allow if EITHER SKU or UPC is in the allowed list
+        const isSkuAllowed = scanSku && allowedItems.includes(scanSku);
+        const isUpcAllowed = scanUpc && allowedItems.includes(scanUpc);
+
+        if (!isSkuAllowed && !isUpcAllowed) {
            setScans(prev => prev.map(s => s.id === uiId ? { 
              ...s, 
              status: 'error' as ScanRow['status'], 
-             product_description: `Restricted: SKU "${matchedRule.system_sku}" is not allowed here.` 
+             product_description: `Restricted: SKU "${matchedRule.system_sku}" or UPC "${matchedRule.upc}" is not allowed here.` 
            } : s));
            sessionScans.current.delete(normalized);
            return;

@@ -440,14 +440,14 @@ export default function Home() {
                 <h4 className="text-xs font-bold uppercase text-primary mb-4">Scanning Restrictions</h4>
                 
                 <div className="flex flex-col gap-6">
-                  {/* SKU Restrictions Table */}
+                  {/* SKU/UPC Restrictions Table */}
                   <div>
-                    <label className="text-[10px] font-bold uppercase text-muted mb-2 block">Allowed System SKUs</label>
+                    <label className="text-[10px] font-bold uppercase text-muted mb-2 block">Allowed System SKUs or UPCs</label>
                     <div className="flex gap-2 mb-2">
                       <input 
                         type="text" 
                         className="input text-xs font-mono py-1 flex-1" 
-                        placeholder="Enter SKU..." 
+                        placeholder="Enter SKU or UPC..." 
                         value={newSku}
                         onChange={e => setNewSku(e.target.value)}
                         onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); const val = newSku.trim(); if (val) { const current = editingCollection.restricted_skus ? editingCollection.restricted_skus.split(',') : []; if (!current.includes(val)) { setEditingCollection({...editingCollection, restricted_skus: [...current, val].join(',')}); } setNewSku(''); } } }}

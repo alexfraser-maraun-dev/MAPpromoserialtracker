@@ -244,64 +244,76 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-8">
-              <div>
-                <h4 className="mb-4 text-primary uppercase tracking-wider text-xs">By Product</h4>
-                <div className="flex flex-col gap-2">
-                  {Object.entries(activeRollup.stats.byProduct)
-                    .sort((a, b) => b[1] - a[1])
-                    .map(([name, count]) => (
-                      <div key={name} className="flex justify-between items-center text-sm border-b border-border border-opacity-50 pb-1">
-                        <span className="truncate mr-4" title={name}>{name}</span>
-                        <strong className="shrink-0">{count}</strong>
-                      </div>
-                    ))}
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-8">
-                <div>
-                  <h4 className="mb-4 text-primary uppercase tracking-wider text-xs">By Employee</h4>
-                  <div className="flex flex-col gap-2">
-                    {Object.entries(activeRollup.stats.byEmployee)
+            <div className="flex flex-col gap-8">
+              <section>
+                <h4 className="flex items-center gap-2 mb-3 text-primary uppercase tracking-wider text-xs font-bold">
+                  <Play size={14} /> By Product
+                </h4>
+                <div className="card" style={{ backgroundColor: 'var(--background)', padding: '0.75rem' }}>
+                  <div className="flex flex-col gap-1">
+                    {Object.entries(activeRollup.stats.byProduct)
                       .sort((a, b) => b[1] - a[1])
                       .map(([name, count]) => (
-                        <div key={name} className="flex justify-between items-center text-sm border-b border-border border-opacity-50 pb-1">
-                          <span className="truncate mr-4">{name}</span>
-                          <strong className="shrink-0">{count}</strong>
+                        <div key={name} className="flex justify-between items-center text-sm py-1 border-b border-border last:border-0 border-opacity-30">
+                          <span className="truncate mr-4" title={name}>{name}</span>
+                          <span className="badge badge-neutral shrink-0">{count}</span>
                         </div>
                       ))}
                   </div>
                 </div>
+              </section>
 
-                <div>
-                  <h4 className="mb-4 text-primary uppercase tracking-wider text-xs">By Brand</h4>
-                  <div className="flex flex-col gap-2">
-                    {Object.entries(activeRollup.stats.byBrand)
-                      .sort((a, b) => b[1] - a[1])
-                      .map(([name, count]) => (
-                        <div key={name} className="flex justify-between items-center text-sm border-b border-border border-opacity-50 pb-1">
-                          <span className="truncate mr-4">{name}</span>
-                          <strong className="shrink-0">{count}</strong>
-                        </div>
-                      ))}
-                  </div>
-                </div>
-
-                <div>
-                  <h4 className="mb-4 text-primary uppercase tracking-wider text-xs">Collection Info</h4>
-                  <div className="text-sm flex flex-col gap-1">
-                    <div className="flex justify-between">
-                      <span className="text-muted">Created</span>
-                      <span>{new Date(activeRollup.collection.created_at).toLocaleDateString()}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted">Status</span>
-                      <span className="capitalize">{activeRollup.collection.status}</span>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <section>
+                  <h4 className="flex items-center gap-2 mb-3 text-primary uppercase tracking-wider text-xs font-bold">
+                    <Archive size={14} /> By Employee
+                  </h4>
+                  <div className="card" style={{ backgroundColor: 'var(--background)', padding: '0.75rem' }}>
+                    <div className="flex flex-col gap-1">
+                      {Object.entries(activeRollup.stats.byEmployee)
+                        .sort((a, b) => b[1] - a[1])
+                        .map(([name, count]) => (
+                          <div key={name} className="flex justify-between items-center text-sm py-1 border-b border-border last:border-0 border-opacity-30">
+                            <span className="truncate mr-4">{name}</span>
+                            <span className="badge badge-neutral shrink-0">{count}</span>
+                          </div>
+                        ))}
                     </div>
                   </div>
-                </div>
+                </section>
+
+                <section>
+                  <h4 className="flex items-center gap-2 mb-3 text-primary uppercase tracking-wider text-xs font-bold">
+                    <BarChart3 size={14} /> By Brand
+                  </h4>
+                  <div className="card" style={{ backgroundColor: 'var(--background)', padding: '0.75rem' }}>
+                    <div className="flex flex-col gap-1">
+                      {Object.entries(activeRollup.stats.byBrand)
+                        .sort((a, b) => b[1] - a[1])
+                        .map(([name, count]) => (
+                          <div key={name} className="flex justify-between items-center text-sm py-1 border-b border-border last:border-0 border-opacity-30">
+                            <span className="truncate mr-4">{name}</span>
+                            <span className="badge badge-neutral shrink-0">{count}</span>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                </section>
               </div>
+
+              <section className="bg-muted p-4 rounded-lg">
+                <h4 className="mb-3 text-primary uppercase tracking-wider text-xs font-bold">Collection Details</h4>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div className="flex flex-col">
+                    <span className="text-muted text-xs">Created Date</span>
+                    <span className="font-medium">{new Date(activeRollup.collection.created_at).toLocaleDateString()}</span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-muted text-xs">Current Status</span>
+                    <span className="font-medium capitalize">{activeRollup.collection.status}</span>
+                  </div>
+                </div>
+              </section>
             </div>
 
             <div className="mt-8 pt-4 border-t flex justify-end">

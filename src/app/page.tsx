@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
-import { Plus, Play, Download, Archive, BarChart3, X, Settings2, Trash2 } from 'lucide-react';
+import { Plus, Play, Download, Archive, BarChart3, X, Settings2, Trash2, Copy } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 
 type Collection = {
@@ -103,6 +103,31 @@ export default function Home() {
       setEditingCollection(null);
     }
     setIsSavingSettings(false);
+  };
+
+  const handleDuplicate = async (col: Collection) => {
+    if (!session?.user?.email) return;
+
+    const { data, error } = await supabase
+      .from('collections')
+      .insert([
+        {
+          name: `${col.name} (Copy)`,
+          brand: col.brand,
+          status: 'active',
+          restricted_skus: col.restricted_skus,
+          restricted_brands: col.restricted_brands,
+          created_by: session.user.email,
+        }
+      ])
+      .select()
+      .single();
+
+    if (!error && data) {
+      setCollections([data, ...collections]);
+    } else {
+      alert('Failed to duplicate collection.');
+    }
   };
 
   const downloadCsv = (id: string) => {
@@ -261,6 +286,10 @@ export default function Home() {
 
                 <button onClick={() => setEditingCollection(col)} className="btn btn-outline" title="Settings">
                   <Settings2 size={16} />
+                </button>
+
+                <button onClick={() => handleDuplicate(col)} className="btn btn-outline" title="Duplicate Collection">
+                  <Copy size={16} />
                 </button>
 
                 <button 

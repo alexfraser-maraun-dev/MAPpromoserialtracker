@@ -165,7 +165,7 @@ export default function ConfigPage() {
         <h1>Mapping Config</h1>
       </div>
 
-      <div className="grid grid-cols-2 gap-6 mb-6">
+      <div className="grid grid-cols-2 gap-6 mb-6" style={{ alignItems: 'flex-start' }}>
         <div className="card">
           <h3 className="flex items-center gap-2 mb-4"><Search size={20} /> UPC Lookup</h3>
           <form onSubmit={handleUpcSearch} className="flex gap-4 mb-4">
@@ -266,7 +266,7 @@ export default function ConfigPage() {
 
         <div className="card flex flex-col">
           <h3 className="flex items-center gap-2 mb-4"><Settings2 size={20} /> Active Rules</h3>
-          <div className="flex flex-col gap-2 overflow-y-auto" style={{ maxHeight: '600px' }}>
+          <div className="flex flex-col gap-2">
             {rules.map(rule => (
               <div key={rule.id} className="card relative group" style={{ padding: '0.75rem', backgroundColor: 'var(--background)' }}>
                 <div className="flex justify-between items-start mb-1">
